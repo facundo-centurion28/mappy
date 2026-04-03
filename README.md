@@ -61,7 +61,7 @@ src/
 ### Configurar Firebase
 
 1. Creá un proyecto en [console.firebase.google.com](https://console.firebase.google.com)
-2. Activá **Firestore Database** → modo de prueba (test mode)
+2. Activá **Firestore Database** y luego publicá reglas de producción (no usar test mode en deploy final)
 3. En *Configuración del proyecto → Tus apps*, registrá una app web y copiá el `firebaseConfig`
 4. Copiá `.env.example` a `.env` y completá los valores (sin comillas):
 
@@ -113,6 +113,16 @@ npm run preview
 6. El dominio anterior `mappy-a653e.web.app` queda redirigido a `mappy-travel.web.app`
 
 > Este proyecto está configurado para publicar `dist/` en Hosting, usando el site `mappy-travel`.
+
+## Reglas de Firestore (producción)
+
+Este proyecto ya incluye reglas de producción en [firestore.rules](firestore.rules) para las colecciones `places` y `trips`.
+
+Para publicarlas:
+
+```bash
+firebase deploy --only firestore:rules
+```
 
 ## Uso de Viajes
 

@@ -1,18 +1,103 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isNumber(value) {
+      return value is int || value is float;
+    }
+
+    function isShortString(value, max) {
+      return value is string && value.size() <= max;
+    }
+
+    function isRequiredString(value, max) {
+      return value is string && value.size() > 0 && value.size() <= max;
+    }
+
+    function validCoordinates(coords) {
+      return coords == null || (
+        coords is map
+        && coords.keys().hasOnly(['lat', 'lng'])
+        && isNumber(coords.lat)
+        && isNumber(coords.lng)
+        && coords.lat >= -90 && coords.lat <= 90
+        && coords.lng >= -180 && coords.lng <= 180
+      );
+    }
+
+    function validSchedule(schedule) {
+      return schedule is map
+        && schedule.keys().hasOnly(['open', 'close', 'days'])
+        && isShortString(schedule.open, 20)
+        && isShortString(schedule.close, 20)
+        && isShortString(schedule.days, 40);
+    }
+
+    function validPrice(price) {
+      return price is map
+        && price.keys().hasOnly(['min', 'max', 'currency'])
+        && isNumber(price.min)
+        && isNumber(price.max)
+        && price.min >= 0
+        && price.max >= 0
+        && isRequiredString(price.currency, 8);
+    }
+
+    function validPlace(data, creating) {
+      return data.keys().hasOnly([
+          'name', 'category', 'description', 'emoji', 'imageUrl',
+          'schedule', 'price', 'mapsUrl', 'tags', 'coordinates', 'createdAt'
+        ])
+        && isRequiredString(data.name, 120)
+        && isRequiredString(data.category, 40)
+        && isShortString(data.description, 2000)
+        && isShortString(data.emoji, 8)
+        && isShortString(data.imageUrl, 1000)
+        && validSchedule(data.schedule)
+        && validPrice(data.price)
+        && isShortString(data.mapsUrl, 1000)
+        && data.tags is list
+        && data.tags.size() <= 40
+        && validCoordinates(data.coordinates)
+        && (
+          creating
+            ? isNumber(data.createdAt)
+            : data.createdAt == resource.data.createdAt
+        );
+    }
+
+    function validTrip(data, creating) {
+      return data.keys().hasOnly([
+          'name', 'items', 'createdAt', 'startPlaceId', 'endPlaceId'
+        ])
+        && isRequiredString(data.name, 120)
+        && data.items is list
+        && data.items.size() <= 500
+        && isShortString(data.startPlaceId, 200)
+        && isShortString(data.endPlaceId, 200)
+        && (
+          creating
+            ? isNumber(data.createdAt)
+            : data.createdAt == resource.data.createdAt
+        );
+    }
+
+    match /places/{placeId} {
+      allow read: if true;
+      allow create: if validPlace(request.resource.data, true);
+      allow update: if validPlace(request.resource.data, false);
+      allow delete: if true;
+    }
+
+    match /trips/{tripId} {
+      allow read: if true;
+      allow create: if validTrip(request.resource.data, true);
+      allow update: if validTrip(request.resource.data, false);
+      allow delete: if true;
+    }
+
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 5, 3);
+      allow read, write: if false;
     }
   }
 }
