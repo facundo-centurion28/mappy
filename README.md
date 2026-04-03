@@ -9,12 +9,14 @@ App para guardar y organizar tus lugares favoritos de Google Maps.
 - Buscar por nombre, descripción o etiquetas
 - Link directo a Google Maps
 - **Mapa interactivo** con pins por lugar (Leaflet + OpenStreetMap, sin API key)
-- Ruta por calles entre los lugares visibles usando OSRM público (sin API key)
+- Ruta por calles entre los lugares visibles usando OSRM público (sin API key), priorizando modo caminando
+- Selector de trayecto para alternar entre caminando (directo) y auto
 - Las coordenadas se extraen automáticamente del link de Google Maps, o se ingresan manualmente
 - Crear **viajes** y asignar lugares por **día**
 - Un mismo lugar puede aparecer en varios días dentro del mismo viaje
 - Elegir un viaje y filtrar por día para ver solo esos lugares/pins
 - En cada viaje podés fijar un punto de inicio y uno final para ordenar la ruta del mapa
+- Si un lugar no tiene emoji propio, usa automáticamente el ícono de su categoría
 - En el modal de viajes, los lugares seleccionados/no seleccionados tienen estilos visuales distintos
 - El campo de día en viajes permite borrar y reescribir el valor de forma natural
 - El botón de guardar viaje se bloquea mientras persiste en Firestore para evitar duplicados por doble click

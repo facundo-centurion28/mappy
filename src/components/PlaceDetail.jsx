@@ -1,4 +1,4 @@
-import { CAT_COLORS } from '../data/places'
+import { CAT_COLORS, getPlaceEmoji } from '../data/places'
 import styles from './PlaceDetail.module.css'
 
 function formatPrice(price) {
@@ -21,7 +21,7 @@ export default function PlaceDetail({ place, onClose, onEdit, onDelete }) {
             <img src={place.imageUrl} alt={place.name} className={styles.img}
               onError={e => { e.target.style.display = 'none' }} />
           ) : (
-            <div className={styles.emoji}>{place.emoji || '📍'}</div>
+            <div className={styles.emoji}>{getPlaceEmoji(place)}</div>
           )}
           <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">×</button>
         </div>

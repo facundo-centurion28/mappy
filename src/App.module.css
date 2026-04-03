@@ -145,6 +145,22 @@
   background: rgba(255, 255, 255, 0.95);
 }
 
+.routeModeWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.routeModeSelect {
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.95);
+}
+
 .tripActions {
   display: flex;
   gap: 6px;
@@ -339,6 +355,11 @@
     overflow: visible;
   }
   .tripSelect {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .routeModeSelect {
     min-width: 0;
     width: 100%;
   }

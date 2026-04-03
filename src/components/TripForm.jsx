@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
+import { getPlaceEmoji } from '../data/places'
 import styles from './TripForm.module.css'
 
 function parseDays(value) {
@@ -180,7 +181,7 @@ export default function TripForm({ trip, places, onSave, onClose }) {
                         disabled={isSaving}
                         onChange={(e) => togglePlace(place.id, e.target.checked)}
                       />
-                      <span className={styles.placeName}>{place.emoji || '📍'} {place.name}</span>
+                      <span className={styles.placeName}>{getPlaceEmoji(place)} {place.name}</span>
                     </label>
                     <div className={`${styles.dayWrap} ${!data.enabled ? styles.dayWrapDisabled : ''}`}>
                       <span>Días</span>

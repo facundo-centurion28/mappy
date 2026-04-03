@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { getPlaceEmoji } from '../data/places'
 import styles from './MapView.module.css'
 
 // Fix default marker icons broken by Vite's asset handling
@@ -49,7 +50,14 @@ function MapViewport({ markerPoints, routePoints }) {
   return null
 }
 
-export default function MapView({ places, routePlaces = places, startPlaceId = '', endPlaceId = '', onSelectPlace }) {
+export default function MapView({
+  places,
+  routePlaces = places,
+  routeMode = 'walking',
+  startPlaceId = '',
+  endPlaceId = '',
+  onSelectPlace,
+}) {
   const withCoords = useMemo(
     () => places.filter(p => p.coordinates?.lat != null && p.coordinates?.lng != null),
     [places]
@@ -89,23 +97,35 @@ export default function MapView({ places, routePlaces = places, startPlaceId = '
           .map((place) => `${place.coordinates.lng},${place.coordinates.lat}`)
           .join(';')
 
-        const response = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`,
-          { signal: controller.signal }
-        )
+        // Caminando usa perfil `foot`; auto usa `driving`.
+        // Para caminando dejamos fallback a driving por compatibilidad en algunos mirrors públicos.
+        const profiles = routeMode === 'driving'
+          ? ['driving']
+          : ['foot', 'driving']
+        let resolvedGeometry = null
 
-        if (!response.ok) {
-          throw new Error('No se pudo calcular la ruta.')
+        for (const profile of profiles) {
+          const response = await fetch(
+            `https://router.project-osrm.org/route/v1/${profile}/${coordinates}?overview=full&geometries=geojson`,
+            { signal: controller.signal }
+          )
+
+          if (!response.ok) continue
+
+          const data = await response.json()
+          const geometry = data.routes?.[0]?.geometry?.coordinates
+
+          if (geometry?.length) {
+            resolvedGeometry = geometry
+            break
+          }
         }
 
-        const data = await response.json()
-        const geometry = data.routes?.[0]?.geometry?.coordinates
-
-        if (!geometry?.length) {
+        if (!resolvedGeometry?.length) {
           throw new Error('No hay ruta disponible para estos puntos.')
         }
 
-        setRouteLine(geometry.map(([lng, lat]) => [lat, lng]))
+        setRouteLine(resolvedGeometry.map(([lng, lat]) => [lat, lng]))
       } catch (error) {
         if (error.name === 'AbortError') return
         setRouteLine([])
@@ -116,7 +136,7 @@ export default function MapView({ places, routePlaces = places, startPlaceId = '
     loadRoute()
 
     return () => controller.abort()
-  }, [routeStops])
+  }, [routeStops, routeMode])
 
   const getMarkerLabel = (placeId) => {
     if (placeId === startPlaceId && placeId === endPlaceId) return 'I/F'
@@ -152,11 +172,11 @@ export default function MapView({ places, routePlaces = places, startPlaceId = '
           <Marker
             key={place.id}
             position={[place.coordinates.lat, place.coordinates.lng]}
-            icon={makeEmojiIconWithLabel(place.emoji, getMarkerLabel(place.id))}
+            icon={makeEmojiIconWithLabel(getPlaceEmoji(place), getMarkerLabel(place.id))}
             eventHandlers={{ click: () => onSelectPlace(place) }}
           >
             <Popup>
-              <strong>{place.emoji} {place.name}</strong>
+              <strong>{getPlaceEmoji(place)} {place.name}</strong>
               <br />
               <span style={{ fontSize: '12px', color: '#666' }}>{place.category}</span>
               {getMarkerMeta(place.id) && (
@@ -177,7 +197,9 @@ export default function MapView({ places, routePlaces = places, startPlaceId = '
       )}
 
       {routeLine.length > 1 && (
-        <div className={styles.routeNotice}>Ruta por calles activada</div>
+        <div className={styles.routeNotice}>
+          Ruta por calles (modo {routeMode === 'driving' ? 'auto' : 'caminando'})
+        </div>
       )}
 
       {routeError && (

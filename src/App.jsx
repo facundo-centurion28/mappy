@@ -59,6 +59,7 @@ export default function App() {
   const [activeTripDay, setActiveTripDay] = useState('Todos')
   const [showForm, setShowForm] = useState(false)
   const [showTripForm, setShowTripForm] = useState(false)
+  const [routeMode, setRouteMode] = useState('walking')
   const [editingPlace, setEditingPlace] = useState(null)
   const [editingTrip, setEditingTrip] = useState(null)
   const [detailPlace, setDetailPlace] = useState(null)
@@ -276,6 +277,18 @@ export default function App() {
               </select>
             </div>
 
+            <div className={styles.routeModeWrap}>
+              <label className={styles.tripLabel}>Trayecto</label>
+              <select
+                className={styles.routeModeSelect}
+                value={routeMode}
+                onChange={(e) => setRouteMode(e.target.value)}
+              >
+                <option value="walking">Caminando (directo)</option>
+                <option value="driving">Auto</option>
+              </select>
+            </div>
+
             <div className={styles.tripActions}>
               <button className={styles.tripBtn} onClick={openTripNew}>+ Nuevo viaje</button>
               <button className={styles.tripBtn} disabled={!activeTrip} onClick={openTripEdit}>Editar</button>
@@ -323,6 +336,7 @@ export default function App() {
               <MapView
                 places={filtered}
                 routePlaces={routePlaces}
+                routeMode={routeMode}
                 startPlaceId={activeTrip?.startPlaceId || ''}
                 endPlaceId={activeTrip?.endPlaceId || ''}
                 onSelectPlace={setDetailPlace}

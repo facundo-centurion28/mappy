@@ -1,5 +1,5 @@
 import styles from './PlaceCard.module.css'
-import { CAT_COLORS } from '../data/places'
+import { CAT_COLORS, getPlaceEmoji } from '../data/places'
 
 function formatPrice(price) {
   if (!price.min && !price.max) return 'Gratis'
@@ -17,7 +17,7 @@ export default function PlaceCard({ place, onClick }) {
           <img src={place.imageUrl} alt={place.name} className={styles.img}
             onError={e => { e.target.style.display = 'none' }} />
         ) : (
-          <div className={styles.emoji}>{place.emoji || '📍'}</div>
+          <div className={styles.emoji}>{getPlaceEmoji(place)}</div>
         )}
         <span
           className={styles.badge}

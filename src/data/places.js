@@ -80,3 +80,16 @@ export const CAT_COLORS = {
   Hotel:       { bg: '#E0EEF5', text: '#1F5A7A' },
   Otro:        { bg: '#E8E6E0', text: '#4A453F' },
 }
+
+const CATEGORY_EMOJI = Object.fromEntries(
+  CATEGORIES.map((category) => [category.label, category.emoji])
+)
+
+export function getCategoryEmoji(category) {
+  return CATEGORY_EMOJI[category] || '📍'
+}
+
+export function getPlaceEmoji(place) {
+  const customEmoji = place?.emoji?.trim()
+  return customEmoji || getCategoryEmoji(place?.category)
+}
