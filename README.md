@@ -8,6 +8,7 @@ App para guardar y organizar tus lugares favoritos de Google Maps.
 - Filtrar por categoría (Restaurante, Museo, Parque, Bar, etc.)
 - Buscar por nombre, descripción o etiquetas
 - Link directo a Google Maps
+- Carga de ubicación por dirección (geocodificación automática con OpenStreetMap)
 - **Mapa interactivo** con pins por lugar (Leaflet + OpenStreetMap, sin API key)
 - Ruta por calles entre los lugares visibles usando OSRM público (sin API key), priorizando modo caminando
 - Selector de trayecto para alternar entre caminando (directo) y auto

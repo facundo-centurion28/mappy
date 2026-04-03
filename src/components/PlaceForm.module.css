@@ -106,6 +106,33 @@
 
 .tagInput { display: flex; gap: 6px; }
 
+.locationInputRow {
+  display: flex;
+  gap: 8px;
+}
+
+.geoBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.geoBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.geoStatus {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 6px;
+}
+
 .tagAddBtn {
   background: var(--ink);
   color: var(--cream);

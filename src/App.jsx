@@ -284,7 +284,8 @@ export default function App() {
                 value={routeMode}
                 onChange={(e) => setRouteMode(e.target.value)}
               >
-                <option value="walking">Caminando (directo)</option>
+                <option value="none">Sin trayecto</option>
+                <option value="walking">Caminando</option>
                 <option value="driving">Auto</option>
               </select>
             </div>

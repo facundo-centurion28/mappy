@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CATEGORIES } from '../data/places'
-import { extractCoordsFromMapsUrl } from '../utils/maps'
+import { extractCoordsFromMapsUrl, geocodeAddress } from '../utils/maps'
 import styles from './PlaceForm.module.css'
 
 const EMPTY = {
@@ -8,6 +8,7 @@ const EMPTY = {
   emoji: '', imageUrl: '',
   schedule: { open: '', close: '', days: '' },
   price: { min: '', max: '', currency: 'UYU' },
+  address: '',
   mapsUrl: '', tags: [],
   coordinates: { lat: '', lng: '' },
 }
@@ -15,6 +16,8 @@ const EMPTY = {
 export default function PlaceForm({ place, onSave, onClose }) {
   const [form, setForm] = useState(EMPTY)
   const [tagInput, setTagInput] = useState('')
+  const [isGeocoding, setIsGeocoding] = useState(false)
+  const [geoStatus, setGeoStatus] = useState('')
 
   useEffect(() => {
     if (place) {
@@ -42,6 +45,33 @@ export default function PlaceForm({ place, onSave, onClose }) {
   const setSched = (k, v) => setForm(f => ({ ...f, schedule: { ...f.schedule, [k]: v } }))
   const setPrice = (k, v) => setForm(f => ({ ...f, price: { ...f.price, [k]: v } }))
   const setCoords = (k, v) => setForm(f => ({ ...f, coordinates: { ...f.coordinates, [k]: v } }))
+
+  const handleAddressGeocode = async () => {
+    const address = form.address?.trim()
+    if (!address || isGeocoding) return
+
+    setIsGeocoding(true)
+    setGeoStatus('Buscando dirección...')
+
+    try {
+      const result = await geocodeAddress(address)
+      if (!result) {
+        setGeoStatus('No encontramos esa dirección. Probá con más detalle.')
+        return
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        address: result.label,
+        coordinates: { lat: result.lat, lng: result.lng },
+      }))
+      setGeoStatus('✓ Dirección encontrada y coordenadas cargadas.')
+    } catch {
+      setGeoStatus('No se pudo geocodificar la dirección en este momento.')
+    } finally {
+      setIsGeocoding(false)
+    }
+  }
 
   const handleMapsUrlChange = (url) => {
     set('mapsUrl', url)
@@ -181,14 +211,39 @@ export default function PlaceForm({ place, onSave, onClose }) {
           </div>
 
           <div className={styles.section}>
+            <label className={styles.label}>Dirección</label>
+            <div className={styles.locationInputRow}>
+              <input
+                className={styles.input}
+                value={form.address}
+                onChange={e => {
+                  set('address', e.target.value)
+                  if (geoStatus) setGeoStatus('')
+                }}
+                onBlur={handleAddressGeocode}
+                placeholder="Ej: Suipacha 758, CABA, Argentina"
+              />
+              <button
+                type="button"
+                className={styles.geoBtn}
+                disabled={!form.address.trim() || isGeocoding}
+                onClick={handleAddressGeocode}
+              >
+                {isGeocoding ? 'Buscando...' : 'Ubicar'}
+              </button>
+            </div>
+            {geoStatus && <p className={styles.geoStatus}>{geoStatus}</p>}
+          </div>
+
+          <div className={styles.section}>
             <label className={styles.label}>Link de Google Maps</label>
             <input className={styles.input} value={form.mapsUrl}
               onChange={e => handleMapsUrlChange(e.target.value)}
-              placeholder="https://maps.google.com/..." type="url" />
+              placeholder="Opcional: https://maps.google.com/..." type="url" />
           </div>
 
           <div className={styles.sectionGroup}>
-            <label className={styles.label}>Coordenadas (para el mapa)</label>
+            <label className={styles.label}>Coordenadas (opcional, manual)</label>
             {form.mapsUrl && form.coordinates?.lat !== '' && (
               <p className={styles.coordsHint}>✓ Extraídas automáticamente del link</p>
             )}

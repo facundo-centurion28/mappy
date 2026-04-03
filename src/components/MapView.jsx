@@ -82,7 +82,7 @@ export default function MapView({
   }, [withCoords])
 
   useEffect(() => {
-    if (routeStops.length < 2) {
+    if (routeMode === 'none' || routeStops.length < 2) {
       setRouteLine([])
       setRouteError('')
       return
