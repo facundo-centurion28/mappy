@@ -9,7 +9,17 @@ App para guardar y organizar tus lugares favoritos de Google Maps.
 - Buscar por nombre, descripción o etiquetas
 - Link directo a Google Maps
 - **Mapa interactivo** con pins por lugar (Leaflet + OpenStreetMap, sin API key)
+- Ruta por calles entre los lugares visibles usando OSRM público (sin API key)
 - Las coordenadas se extraen automáticamente del link de Google Maps, o se ingresan manualmente
+- Crear **viajes** y asignar lugares por **día**
+- Un mismo lugar puede aparecer en varios días dentro del mismo viaje
+- Elegir un viaje y filtrar por día para ver solo esos lugares/pins
+- En cada viaje podés fijar un punto de inicio y uno final para ordenar la ruta del mapa
+- En el modal de viajes, los lugares seleccionados/no seleccionados tienen estilos visuales distintos
+- El campo de día en viajes permite borrar y reescribir el valor de forma natural
+- El botón de guardar viaje se bloquea mientras persiste en Firestore para evitar duplicados por doble click
+- Corrección de capas visuales: el mapa ya no sobrepasa el header sticky
+- Refresh visual completo: interfaz más estética/fancy con nuevo look & feel (fondos, controles, tarjetas y mapa)
 - Los datos se guardan en **Firebase Firestore** (nube)
 
 ## Estructura del proyecto
@@ -22,13 +32,18 @@ src/
 │   ├── PlaceDetail.jsx     # Modal de detalle
 │   ├── PlaceDetail.module.css
 │   ├── PlaceForm.jsx       # Formulario agregar/editar (incluye campos de coordenadas)
-│   └── PlaceForm.module.css
+│   ├── PlaceForm.module.css
 │   ├── MapView.jsx         # Mapa interactivo con markers emoji
-│   └── MapView.module.css
+│   ├── MapView.module.css
+│   ├── TripForm.jsx        # Formulario de viajes (lugares + día)
+│   └── TripForm.module.css
 ├── data/
 │   └── places.js           # Datos demo y constantes
 ├── hooks/
-│   └── usePlaces.js        # Hook para manejo de estado + localStorage
+│   ├── usePlaces.js        # Hook para lugares (Firestore)
+│   └── useTrips.js         # Hook para viajes (Firestore)
+├── lib/
+│   └── firebase.js         # Inicialización Firebase / Firestore
 ├── utils/
 │   └── maps.js             # Extractor de coordenadas desde URLs de Google Maps
 ├── App.jsx
@@ -48,7 +63,7 @@ src/
 1. Creá un proyecto en [console.firebase.google.com](https://console.firebase.google.com)
 2. Activá **Firestore Database** → modo de prueba (test mode)
 3. En *Configuración del proyecto → Tus apps*, registrá una app web y copiá el `firebaseConfig`
-4. Copiá `.env.example` a `.env` y completá los valores:
+4. Copiá `.env.example` a `.env` y completá los valores (sin comillas):
 
 ```
 VITE_FIREBASE_API_KEY=AIza...
@@ -87,6 +102,27 @@ npm run preview
 2. Entrá a [vercel.com](https://vercel.com) y conectá tu repo
 3. En *Settings → Environment Variables* del proyecto en Vercel, agregá las mismas variables de `.env`
 4. Vercel detecta Vite automáticamente y hace el deploy
+
+## Deploy en Firebase Hosting (opcional)
+
+1. Instalá CLI: `npm install -g firebase-tools`
+2. Login: `firebase login`
+3. Inicializá en el proyecto: `firebase init`
+4. Build: `npm run build`
+5. Deploy: `firebase deploy --only hosting:app`
+6. El dominio anterior `mappy-a653e.web.app` queda redirigido a `mappy-travel.web.app`
+
+> Este proyecto está configurado para publicar `dist/` en Hosting, usando el site `mappy-travel`.
+
+## Uso de Viajes
+
+1. Creá o editá un viaje desde la sección **Viaje**
+2. Seleccioná qué lugares entran en ese viaje
+3. Asigná uno o varios días (por ejemplo `1, 3`) para cada lugar
+4. Elegí el viaje en el selector y luego filtrá por día
+5. La grilla y el mapa mostrarán solo los lugares de ese filtro
+6. Si querés, marcá un inicio y un final para forzar el orden de la ruta
+7. Si hay al menos dos lugares con coordenadas, el mapa dibuja automáticamente la ruta por calles entre ellos
 
 ## Próximas mejoras posibles
 

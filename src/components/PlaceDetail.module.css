@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  z-index: 2000;
   padding: 1rem;
   backdrop-filter: blur(2px);
 }
@@ -24,7 +24,7 @@
 .media {
   position: relative;
   height: 220px;
-  background: var(--cream-dark);
+  background: rgba(0, 141, 137, 0.08);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   overflow: hidden;
 }
@@ -152,8 +152,8 @@
 }
 
 .tag {
-  background: var(--cream-dark);
-  border: 1px solid var(--border);
+  background: rgba(0, 141, 137, 0.12);
+  border: 1px solid rgba(0, 141, 137, 0.2);
   border-radius: 20px;
   padding: 3px 10px;
   font-size: 12px;
@@ -176,7 +176,7 @@
   transition: background 0.15s;
 }
 
-.btnEdit:hover { background: var(--cream-dark); }
+.btnEdit:hover { background: rgba(0, 141, 137, 0.1); }
 
 .btnDelete {
   background: #FFF0EE;

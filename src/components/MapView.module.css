@@ -4,7 +4,16 @@
   min-height: 400px;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(23, 19, 15, 0.18);
+}
+
+.wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(23, 19, 15, 0.06), transparent 24%);
+  z-index: 400;
 }
 
 .map {
@@ -17,21 +26,61 @@
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(26, 23, 20, 0.75);
+  background: rgba(23, 19, 15, 0.8);
   color: #fff;
   font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 20px;
+  padding: 7px 12px;
+  border-radius: 999px;
   pointer-events: none;
   z-index: 500;
   white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.routeNotice {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 141, 137, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 500;
+  letter-spacing: 0.02em;
+}
+
+.noticeError {
+  bottom: 48px;
+  background: rgba(126, 33, 33, 0.88);
 }
 
 /* Emoji marker styles (injected into Leaflet's DOM) */
 :global(.emoji-marker) {
+  position: relative;
   font-size: 24px;
   line-height: 1;
   filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
   cursor: pointer;
   user-select: none;
+}
+
+:global(.emoji-marker-badge) {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #008D89;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
 }

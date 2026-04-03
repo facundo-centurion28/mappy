@@ -5,17 +5,17 @@
 }
 
 :root {
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Poppins', system-ui, sans-serif;
+  --font-body: 'Roboto', system-ui, sans-serif;
 
-  --cream: #F7F4EE;
-  --cream-dark: #EDE9E0;
-  --ink: #1A1714;
-  --ink-soft: #4A453F;
-  --ink-muted: #8C8580;
-  --accent: #C4622D;
-  --accent-light: #F0E0D4;
-  --accent-dark: #9E4A1F;
+  --cream: #F6F1E8;
+  --cream-dark: #E9DEC9;
+  --ink: #17130F;
+  --ink-soft: #443B31;
+  --ink-muted: #817666;
+  --accent: #008D89;
+  --accent-light: #C5F0ED;
+  --accent-dark: #006B66;
   --green: #3D6B4F;
   --green-light: #D6E8DC;
   --blue: #2D5A8E;
@@ -23,25 +23,32 @@
   --amber: #B8860B;
   --amber-light: #FDF0CC;
 
-  --border: rgba(26,23,20,0.1);
-  --border-strong: rgba(26,23,20,0.2);
-  --shadow-sm: 0 1px 3px rgba(26,23,20,0.08);
-  --shadow-md: 0 4px 16px rgba(26,23,20,0.1);
-  --shadow-lg: 0 8px 32px rgba(26,23,20,0.14);
+  --border: rgba(23, 19, 15, 0.12);
+  --border-strong: rgba(23, 19, 15, 0.25);
+  --shadow-sm: 0 2px 8px rgba(23, 19, 15, 0.08);
+  --shadow-md: 0 8px 24px rgba(23, 19, 15, 0.12);
+  --shadow-lg: 0 14px 42px rgba(23, 19, 15, 0.2);
 
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
 }
 
 html, body {
   font-family: var(--font-body);
-  background: var(--cream);
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(0, 141, 137, 0.12), transparent 60%),
+    radial-gradient(1000px 420px at 100% 0%, rgba(0, 107, 102, 0.1), transparent 55%),
+    var(--cream);
   color: var(--ink);
   min-height: 100vh;
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 button {
@@ -51,6 +58,11 @@ button {
 
 input, textarea, select {
   font-family: var(--font-body);
+}
+
+input:focus, textarea:focus, select:focus, button:focus-visible {
+  outline: 2px solid rgba(0, 141, 137, 0.4);
+  outline-offset: 2px;
 }
 
 ::-webkit-scrollbar { width: 6px; }

@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "mappy-a653e"
+  },
+  "targets": {
+    "mappy-a653e": {
+      "hosting": {
+        "app": [
+          "mappy-travel"
+        ],
+        "legacy": [
+          "mappy-a653e"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
