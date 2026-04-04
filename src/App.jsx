@@ -11,6 +11,31 @@ import AppHeader from './components/AppHeader'
 import FilterBar from './components/FilterBar'
 import styles from './App.module.css'
 
+const UI_STATE_KEY = 'mappy-ui-state-v1'
+
+function readUiState() {
+  if (typeof window === 'undefined') return {}
+
+  try {
+    const raw = localStorage.getItem(UI_STATE_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeUiState(state) {
+  if (typeof window === 'undefined') return
+
+  try {
+    localStorage.setItem(UI_STATE_KEY, JSON.stringify(state))
+  } catch {
+    // ignore storage errors
+  }
+}
+
 function getDefaultDayForNewTripItem(activeTrip, activeTripDay) {
   if (activeTripDay !== 'Todos') {
     const selectedDay = Number(activeTripDay)
@@ -56,6 +81,7 @@ function getNextSortForDay(activeTrip, activeTripDay) {
 }
 
 export default function App() {
+  const initialUiState = readUiState()
   const { places, loading, addPlace, updatePlace, deletePlace } = usePlaces()
   const { trips, loadingTrips, addTrip, updateTrip, deleteTrip } = useTrips()
   const [themeMode, setThemeMode] = useState(() => {
@@ -63,16 +89,18 @@ export default function App() {
     if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
-  const [search, setSearch] = useState('')
-  const [activeFilter, setActiveFilter] = useState('Todos')
-  const [activeTripId, setActiveTripId] = useState('')
-  const [activeTripDay, setActiveTripDay] = useState('Todos')
+  const [search, setSearch] = useState(initialUiState.search || '')
+  const [activeFilter, setActiveFilter] = useState(initialUiState.activeFilter || 'Todos')
+  const [activeTripId, setActiveTripId] = useState(initialUiState.activeTripId || '')
+  const [activeTripDay, setActiveTripDay] = useState(initialUiState.activeTripDay || 'Todos')
   const [showForm, setShowForm] = useState(false)
   const [showTripForm, setShowTripForm] = useState(false)
-  const [routeMode, setRouteMode] = useState('walking')
+  const [routeMode, setRouteMode] = useState(initialUiState.routeMode || 'walking')
   const [editingPlace, setEditingPlace] = useState(null)
   const [editingTrip, setEditingTrip] = useState(null)
   const [detailPlace, setDetailPlace] = useState(null)
+  const [showQuickExtraInput, setShowQuickExtraInput] = useState(false)
+  const [quickExtraText, setQuickExtraText] = useState('')
 
   const { activeTrip, bySearchAndTrip, filtered, routePlaces, itineraryEntries, dayExtras, categoryCounts, tripDays, hasUnassignedDay } =
     useFilteredPlaces({ places, activeTripId, trips, search, activeFilter, activeTripDay })
@@ -81,6 +109,42 @@ export default function App() {
     document.documentElement.dataset.theme = themeMode
     localStorage.setItem('mappy-theme', themeMode)
   }, [themeMode])
+
+  useEffect(() => {
+    writeUiState({
+      search,
+      activeFilter,
+      activeTripId,
+      activeTripDay,
+      routeMode,
+    })
+  }, [search, activeFilter, activeTripId, activeTripDay, routeMode])
+
+  useEffect(() => {
+    if (loadingTrips) return
+    if (!activeTripId) return
+
+    const tripStillExists = trips.some((trip) => trip.id === activeTripId)
+    if (!tripStillExists) {
+      setActiveTripId('')
+      setActiveTripDay('Todos')
+    }
+  }, [trips, loadingTrips, activeTripId])
+
+  useEffect(() => {
+    if (loadingTrips || !activeTrip) return
+    if (activeTripDay === 'Todos' || activeTripDay === 'sin-dia') return
+
+    const dayExists = tripDays.some((day) => Number(day) === Number(activeTripDay))
+    if (!dayExists) {
+      setActiveTripDay('Todos')
+    }
+  }, [activeTrip, activeTripDay, tripDays, loadingTrips])
+
+  useEffect(() => {
+    setShowQuickExtraInput(false)
+    setQuickExtraText('')
+  }, [activeTripId, activeTripDay])
 
   const handleToggleFavorite = async (place) => {
     try {
@@ -202,6 +266,36 @@ export default function App() {
     setActiveTripDay('Todos')
   }
 
+  const handleAddQuickExtraItem = async () => {
+    if (!activeTrip || activeTripDay === 'Todos') return
+
+    const text = quickExtraText.trim()
+    if (!text) return
+
+    const nextExtraItems = [
+      ...(activeTrip.extraItems || activeTrip.dayItems || []),
+      {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        text,
+        day: activeTripDay === 'sin-dia' ? null : Number(activeTripDay),
+        sort: getNextSortForDay(activeTrip, activeTripDay),
+      },
+    ]
+
+    try {
+      await updateTrip(activeTrip.id, {
+        items: activeTrip.items || [],
+        extraItems: nextExtraItems,
+        startPlaceId: activeTrip.startPlaceId || '',
+        endPlaceId: activeTrip.endPlaceId || '',
+      })
+      setQuickExtraText('')
+      setShowQuickExtraInput(false)
+    } catch {
+      window.alert('No se pudo agregar el item extra. Revisá la conexión e intentá de nuevo.')
+    }
+  }
+
   const handleMoveItineraryEntry = async (entry, swapWith) => {
     if (!activeTrip || activeTripDay === 'Todos') return
 
@@ -317,6 +411,52 @@ export default function App() {
                 <p className={styles.listToolbarInfo}>
                   {visibleCount} items visibles · {filtered.length} de {places.length} {places.length === 1 ? 'lugar' : 'lugares'}
                 </p>
+                {activeTrip && activeTripDay !== 'Todos' && (
+                  showQuickExtraInput ? (
+                    <div className={styles.listToolbarInlineForm}>
+                      <input
+                        className={styles.listToolbarInput}
+                        value={quickExtraText}
+                        onChange={(e) => setQuickExtraText(e.target.value)}
+                        placeholder="Escribí un item extra..."
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleAddQuickExtraItem()
+                          }
+                          if (e.key === 'Escape') {
+                            setShowQuickExtraInput(false)
+                            setQuickExtraText('')
+                          }
+                        }}
+                        autoFocus
+                      />
+                      <button
+                        className={styles.listToolbarBtn}
+                        onClick={handleAddQuickExtraItem}
+                        disabled={!quickExtraText.trim()}
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        className={styles.listToolbarBtnSecondary}
+                        onClick={() => {
+                          setShowQuickExtraInput(false)
+                          setQuickExtraText('')
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className={styles.listToolbarBtn}
+                      onClick={() => setShowQuickExtraInput(true)}
+                    >
+                      + Item extra
+                    </button>
+                  )
+                )}
               </div>
               <div className={`${styles.grid} ${styles.gridList}`}>
                 {activeTrip && activeTripDay !== 'Todos' ? (
