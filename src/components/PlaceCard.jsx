@@ -7,7 +7,7 @@ function formatPrice(price) {
   return `$${price.min} – $${price.max}`
 }
 
-export default function PlaceCard({ place, onClick }) {
+export default function PlaceCard({ place, onClick, onToggleFavorite, onToggleVisited }) {
   const color = CAT_COLORS[place.category] || CAT_COLORS.Otro
 
   return (
@@ -40,8 +40,28 @@ export default function PlaceCard({ place, onClick }) {
             <span className={styles.metaIcon}>◈</span>
             {formatPrice(place.price || {})}
           </span>
-        </div>
-      </div>
+        </div>        {(onToggleFavorite || onToggleVisited) && (
+          <div className={styles.cardActions}>
+            {onToggleFavorite && (
+              <button
+                className={`${styles.cardActionBtn} ${place.favorite ? styles.cardActionFav : ''}`}
+                onClick={e => { e.stopPropagation(); onToggleFavorite(place) }}
+                title={place.favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+              >
+                {place.favorite ? '⭐' : '☆'} Favorito
+              </button>
+            )}
+            {onToggleVisited && (
+              <button
+                className={`${styles.cardActionBtn} ${place.visited ? styles.cardActionVisited : ''}`}
+                onClick={e => { e.stopPropagation(); onToggleVisited(place) }}
+                title={place.visited ? 'Marcar como no visitado' : 'Marcar como visitado'}
+              >
+                {place.visited ? '✓' : '○'} Visitado
+              </button>
+            )}
+          </div>
+        )}      </div>
     </article>
   )
 }

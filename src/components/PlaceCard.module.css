@@ -96,3 +96,42 @@
 .metaIcon {
   font-size: 11px;
 }
+
+.cardActions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.cardActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(23, 19, 15, 0.15);
+  background: rgba(255,255,255,0.8);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.cardActionBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cardActionFav {
+  background: #FFF8E1;
+  border-color: #F5A623;
+  color: #B8750A;
+}
+
+.cardActionVisited {
+  background: #E8F5E9;
+  border-color: #66BB6A;
+  color: #2E7D32;
+}

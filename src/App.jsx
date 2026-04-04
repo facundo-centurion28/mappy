@@ -67,7 +67,10 @@ export default function App() {
   const bySearchAndCategory = useMemo(() => {
     const q = search.toLowerCase()
     return places.filter(p => {
-      const matchCat = activeFilter === 'Todos' || p.category === activeFilter
+      const matchCat = activeFilter === 'Todos'
+        || p.category === activeFilter
+        || (activeFilter === 'Favoritos' && p.favorite === true)
+        || (activeFilter === 'Visitados' && p.visited === true)
       const matchQ = !q ||
         p.name.toLowerCase().includes(q) ||
         p.description?.toLowerCase().includes(q) ||
@@ -153,8 +156,24 @@ export default function App() {
     }
     
     source.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1 })
+    counts['Favoritos'] = source.filter(p => p.favorite).length
+    counts['Visitados'] = source.filter(p => p.visited).length
     return counts
   }, [places, activeTrip])
+
+  const handleToggleFavorite = (place) => {
+    updatePlace(place.id, { favorite: !place.favorite })
+    if (detailPlace?.id === place.id) {
+      setDetailPlace(prev => ({ ...prev, favorite: !prev.favorite }))
+    }
+  }
+
+  const handleToggleVisited = (place) => {
+    updatePlace(place.id, { visited: !place.visited })
+    if (detailPlace?.id === place.id) {
+      setDetailPlace(prev => ({ ...prev, visited: !prev.visited }))
+    }
+  }
 
   const handleSave = (data) => {
     if (editingPlace) {
@@ -247,16 +266,17 @@ export default function App() {
             onChange={e => setSearch(e.target.value)}
           />
           <div className={styles.filters}>
-            {['Todos', ...CATEGORIES.map(c => c.label)].map(cat => {
+            {['Todos', 'Favoritos', 'Visitados', ...CATEGORIES.map(c => c.label)].map(cat => {
               const count = cat === 'Todos' ? bySearchAndTrip.length : (categoryCounts[cat] || 0)
-              if (cat !== 'Todos' && count === 0) return null
+              const isSpecial = cat === 'Todos' || cat === 'Favoritos' || cat === 'Visitados'
+              if (!isSpecial && count === 0) return null
               return (
                 <button
                   key={cat}
                   className={`${styles.filterBtn} ${activeFilter === cat ? styles.filterActive : ''}`}
                   onClick={() => setActiveFilter(cat)}
                 >
-                  {cat} {count > 0 && <span className={styles.filterCount}>{count}</span>}
+                  {cat === 'Favoritos' ? '⭐ ' : cat === 'Visitados' ? '✓ ' : ''}{cat}{count > 0 && <span className={styles.filterCount}>{count}</span>}
                 </button>
               )
             })}
@@ -347,7 +367,13 @@ export default function App() {
             <div className={styles.listPanel}>
               <div className={styles.grid}>
                 {filtered.map(place => (
-                  <PlaceCard key={place.id} place={place} onClick={setDetailPlace} />
+                  <PlaceCard
+                    key={place.id}
+                    place={place}
+                    onClick={setDetailPlace}
+                    onToggleFavorite={handleToggleFavorite}
+                    onToggleVisited={handleToggleVisited}
+                  />
                 ))}
               </div>
             </div>
@@ -378,6 +404,8 @@ export default function App() {
           onClose={() => setDetailPlace(null)}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onToggleFavorite={handleToggleFavorite}
+          onToggleVisited={handleToggleVisited}
         />
       )}
     </div>

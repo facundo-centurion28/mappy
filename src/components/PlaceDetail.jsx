@@ -9,7 +9,7 @@ function formatPrice(price) {
   return `${sym}${price.min} – ${sym}${price.max}`
 }
 
-export default function PlaceDetail({ place, onClose, onEdit, onDelete }) {
+export default function PlaceDetail({ place, onClose, onEdit, onDelete, onToggleFavorite, onToggleVisited }) {
   if (!place) return null
   const color = CAT_COLORS[place.category] || CAT_COLORS.Otro
 
@@ -67,6 +67,27 @@ export default function PlaceDetail({ place, onClose, onEdit, onDelete }) {
               {place.tags.map(t => (
                 <span key={t} className={styles.tag}>{t}</span>
               ))}
+            </div>
+          )}
+
+          {(onToggleFavorite || onToggleVisited) && (
+            <div className={styles.toggleRow}>
+              {onToggleFavorite && (
+                <button
+                  className={`${styles.toggleBtn} ${place.favorite ? styles.toggleBtnFav : ''}`}
+                  onClick={() => onToggleFavorite(place)}
+                >
+                  {place.favorite ? '⭐ Favorito' : '☆ Agregar a favoritos'}
+                </button>
+              )}
+              {onToggleVisited && (
+                <button
+                  className={`${styles.toggleBtn} ${place.visited ? styles.toggleBtnVisited : ''}`}
+                  onClick={() => onToggleVisited(place)}
+                >
+                  {place.visited ? '✓ Visitado' : '○ Marcar como visitado'}
+                </button>
+              )}
             </div>
           )}
 

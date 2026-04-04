@@ -46,7 +46,8 @@ service cloud.firestore {
     function validPlace(data, creating) {
       return data.keys().hasOnly([
           'name', 'category', 'description', 'emoji', 'imageUrl',
-          'schedule', 'price', 'address', 'mapsUrl', 'tags', 'coordinates', 'createdAt'
+          'schedule', 'price', 'address', 'mapsUrl', 'tags', 'coordinates', 'createdAt',
+          'favorite', 'visited'
         ])
         && isRequiredString(data.name, 120)
         && isRequiredString(data.category, 40)
@@ -60,6 +61,8 @@ service cloud.firestore {
         && data.tags is list
         && data.tags.size() <= 40
         && validCoordinates(data.coordinates)
+        && (!("favorite" in data) || data.favorite is bool)
+        && (!("visited" in data) || data.visited is bool)
         && (
           creating
             ? isNumber(data.createdAt)
