@@ -7,7 +7,7 @@ const EMPTY = {
   name: '', category: 'Restaurante', description: '',
   emoji: '', imageUrl: '',
   schedule: { open: '', close: '', days: '' },
-  price: { min: '', max: '', currency: 'UYU' },
+  price: { min: '', max: '', currency: 'UYU', free: false },
   address: '',
   mapsUrl: '', tags: [],
   coordinates: { lat: '', lng: '' },
@@ -29,6 +29,7 @@ export default function PlaceForm({ place, onSave, onClose }) {
           min: place.price?.min ?? '',
           max: place.price?.max ?? '',
           currency: place.price?.currency || 'UYU',
+          free: place.price?.free === true,
         },
         tags: place.tags || [],
         coordinates: {
@@ -96,12 +97,15 @@ export default function PlaceForm({ place, onSave, onClose }) {
     if (!form.name.trim()) return
     const lat = parseFloat(form.coordinates?.lat)
     const lng = parseFloat(form.coordinates?.lng)
+    const min = form.price.free || form.price.min === '' ? null : Number(form.price.min)
+    const max = form.price.free || form.price.max === '' ? null : Number(form.price.max)
+
     onSave({
       ...form,
       price: {
         ...form.price,
-        min: Number(form.price.min) || 0,
-        max: Number(form.price.max) || 0,
+        min: Number.isNaN(min) ? null : min,
+        max: Number.isNaN(max) ? null : max,
       },
       coordinates: (!isNaN(lat) && !isNaN(lng)) ? { lat, lng } : null,
     })
@@ -182,26 +186,37 @@ export default function PlaceForm({ place, onSave, onClose }) {
           </div>
 
           <div className={styles.sectionGroup}>
-            <label className={styles.label}>Precio (0 = gratis)</label>
+            <label className={styles.label}>Precio (dejalo vacío si no aplica)</label>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={form.price.free === true}
+                onChange={e => setPrice('free', e.target.checked)}
+              />
+              <span>Este lugar es gratis</span>
+            </label>
             <div className={styles.row3}>
               <div>
                 <span className={styles.sublabel}>Mínimo</span>
                 <input className={styles.input} type="number" min="0"
                   value={form.price.min}
                   onChange={e => setPrice('min', e.target.value)}
-                  placeholder="0" />
+                  placeholder="Ej: 1500"
+                  disabled={form.price.free === true} />
               </div>
               <div>
                 <span className={styles.sublabel}>Máximo</span>
                 <input className={styles.input} type="number" min="0"
                   value={form.price.max}
                   onChange={e => setPrice('max', e.target.value)}
-                  placeholder="0" />
+                  placeholder="Ej: 2500"
+                  disabled={form.price.free === true} />
               </div>
               <div>
                 <span className={styles.sublabel}>Moneda</span>
                 <select className={styles.input} value={form.price.currency}
-                  onChange={e => setPrice('currency', e.target.value)}>
+                  onChange={e => setPrice('currency', e.target.value)}
+                  disabled={form.price.free === true}>
                   <option value="UYU">UYU</option>
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>

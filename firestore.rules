@@ -35,11 +35,12 @@ service cloud.firestore {
 
     function validPrice(price) {
       return price is map
-        && price.keys().hasOnly(['min', 'max', 'currency'])
-        && isNumber(price.min)
-        && isNumber(price.max)
-        && price.min >= 0
-        && price.max >= 0
+        && price.keys().hasOnly(['min', 'max', 'currency', 'free'])
+        && (price.min == null || isNumber(price.min))
+        && (price.max == null || isNumber(price.max))
+        && (price.min == null || price.min >= 0)
+        && (price.max == null || price.max >= 0)
+        && (!('free' in price) || price.free is bool)
         && isRequiredString(price.currency, 8);
     }
 

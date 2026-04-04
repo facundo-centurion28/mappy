@@ -2,9 +2,17 @@ import styles from './PlaceCard.module.css'
 import { CAT_COLORS, getPlaceEmoji } from '../data/places'
 
 function formatPrice(price) {
-  if (!price.min && !price.max) return 'Gratis'
-  if (price.min === price.max) return `$${price.min}`
-  return `$${price.min} – $${price.max}`
+  if (price?.free === true) return 'Gratis'
+
+  const hasMin = price?.min !== '' && price?.min != null
+  const hasMax = price?.max !== '' && price?.max != null
+
+  if (!hasMin && !hasMax) return 'Sin precio'
+  if (hasMin && hasMax && Number(price.min) === 0 && Number(price.max) === 0) return 'Precio no especificado'
+  if (hasMin && hasMax && Number(price.min) === Number(price.max)) return `$${price.min}`
+  if (hasMin && hasMax) return `$${price.min} – $${price.max}`
+  if (hasMin) return `Desde $${price.min}`
+  return `Hasta $${price.max}`
 }
 
 export default function PlaceCard({ place, onClick, onToggleFavorite, onToggleVisited }) {

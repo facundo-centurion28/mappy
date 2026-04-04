@@ -2,11 +2,20 @@ import { CAT_COLORS, getPlaceEmoji } from '../data/places'
 import styles from './PlaceDetail.module.css'
 
 function formatPrice(price) {
-  if (!price) return 'Gratis'
-  if (!price.min && !price.max) return 'Gratis'
+  if (price?.free === true) return 'Gratis'
+
+  const hasMin = price?.min !== '' && price?.min != null
+  const hasMax = price?.max !== '' && price?.max != null
+
+  if (!hasMin && !hasMax) return 'Sin precio'
+
   const sym = price.currency === 'USD' ? 'U$S ' : price.currency === 'EUR' ? '€' : '$'
-  if (price.min === price.max) return `${sym}${price.min}`
-  return `${sym}${price.min} – ${sym}${price.max}`
+
+  if (hasMin && hasMax && Number(price.min) === 0 && Number(price.max) === 0) return 'Precio no especificado'
+  if (hasMin && hasMax && Number(price.min) === Number(price.max)) return `${sym}${price.min}`
+  if (hasMin && hasMax) return `${sym}${price.min} – ${sym}${price.max}`
+  if (hasMin) return `Desde ${sym}${price.min}`
+  return `Hasta ${sym}${price.max}`
 }
 
 export default function PlaceDetail({ place, onClose, onEdit, onDelete, onToggleFavorite, onToggleVisited }) {
