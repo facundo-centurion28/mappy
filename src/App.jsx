@@ -158,8 +158,9 @@ export default function App() {
 
   const handleSave = (data) => {
     if (editingPlace) {
-      updatePlace(editingPlace.id, data)
-      setDetailPlace({ ...editingPlace, ...data })
+      const { id, ...updateData } = data
+      updatePlace(editingPlace.id, updateData)
+      setDetailPlace({ ...editingPlace, ...updateData })
     } else {
       addPlace(data)
     }
