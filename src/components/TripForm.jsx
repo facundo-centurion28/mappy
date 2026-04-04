@@ -12,6 +12,11 @@ function parseDays(value) {
   )].sort((a, b) => a - b)
 }
 
+function toSortValue(value, fallback) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
 function buildInitialAssignments(places, trip) {
   const byPlace = Object.fromEntries(
     places.map((p) => [p.id, { enabled: false, days: '' }])
@@ -41,6 +46,9 @@ function buildInitialAssignments(places, trip) {
 export default function TripForm({ trip, places, onSave, onClose }) {
   const [name, setName] = useState('')
   const [assignments, setAssignments] = useState({})
+  const [extraItems, setExtraItems] = useState([])
+  const [extraText, setExtraText] = useState('')
+  const [extraDay, setExtraDay] = useState('')
   const [startPlaceId, setStartPlaceId] = useState('')
   const [endPlaceId, setEndPlaceId] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -49,6 +57,7 @@ export default function TripForm({ trip, places, onSave, onClose }) {
   useEffect(() => {
     setName(trip?.name || '')
     setAssignments(buildInitialAssignments(places, trip))
+    setExtraItems(trip?.extraItems || trip?.dayItems || [])
     setStartPlaceId(trip?.startPlaceId || '')
     setEndPlaceId(trip?.endPlaceId || '')
   }, [trip, places])
@@ -57,6 +66,20 @@ export default function TripForm({ trip, places, onSave, onClose }) {
     () => Object.values(assignments).filter((a) => a?.enabled).length,
     [assignments]
   )
+
+  const allSelected = places.length > 0 && selectedCount === places.length
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setAssignments(buildInitialAssignments(places, null))
+      setStartPlaceId('')
+      setEndPlaceId('')
+    } else {
+      setAssignments(
+        Object.fromEntries(places.map((p) => [p.id, { enabled: true, days: '1' }]))
+      )
+    }
+  }
 
   const selectedPlaces = useMemo(
     () => places.filter((place) => assignments[place.id]?.enabled),
@@ -98,10 +121,35 @@ export default function TripForm({ trip, places, onSave, onClose }) {
         ...prev,
         [placeId]: {
           ...item,
-          days: (normalized.length ? normalized : [1]).join(', '),
+          days: normalized.join(', '),
         },
       }
     })
+  }
+
+  const addExtraItem = () => {
+    const text = extraText.trim()
+    if (!text) return
+
+    const parsedDay = Number(extraDay)
+    const day = Number.isFinite(parsedDay) && parsedDay > 0 ? Math.floor(parsedDay) : null
+
+    setExtraItems((prev) => [
+      ...prev,
+      {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        text,
+        day,
+        sort: prev.length,
+      },
+    ])
+
+    setExtraText('')
+    setExtraDay('')
+  }
+
+  const removeExtraItem = (id) => {
+    setExtraItems((prev) => prev.filter((item) => item.id !== id))
   }
 
   const handleSubmit = async (e) => {
@@ -115,9 +163,13 @@ export default function TripForm({ trip, places, onSave, onClose }) {
       .filter(([, value]) => value?.enabled)
       .flatMap(([placeId, value]) => {
         const days = parseDays(value.days)
-        const normalizedDays = days.length ? days : [1]
-        return normalizedDays.map((day) => ({ placeId, day }))
+        if (days.length === 0) return [{ placeId, day: null }]
+        return days.map((day) => ({ placeId, day }))
       })
+      .map((item, index) => ({
+        ...item,
+        sort: toSortValue(item.sort, index),
+      }))
 
     const includedPlaceIds = new Set(items.map((item) => item.placeId))
     const safeStartPlaceId = includedPlaceIds.has(startPlaceId) ? startPlaceId : ''
@@ -125,10 +177,25 @@ export default function TripForm({ trip, places, onSave, onClose }) {
       ? endPlaceId
       : ''
 
+    const normalizedExtraItems = extraItems
+      .map((item, index) => {
+        const text = (item.text || '').trim()
+        if (!text) return null
+        const parsedDay = Number(item.day)
+        return {
+          id: item.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          text,
+          day: Number.isFinite(parsedDay) && parsedDay > 0 ? Math.floor(parsedDay) : null,
+          sort: toSortValue(item.sort, index),
+        }
+      })
+      .filter(Boolean)
+
     try {
       await onSave({
         name: name.trim(),
         items,
+        extraItems: normalizedExtraItems,
         startPlaceId: safeStartPlaceId,
         endPlaceId: safeEndPlaceId,
       })
@@ -141,12 +208,13 @@ export default function TripForm({ trip, places, onSave, onClose }) {
   return (
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>{trip ? 'Editar viaje' : 'Nuevo viaje'}</h2>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">×</button>
-        </div>
+        <div className={styles.modalScroll}>
+          <div className={styles.header}>
+            <h2 className={styles.title}>{trip ? 'Editar viaje' : 'Nuevo viaje'}</h2>
+            <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">×</button>
+          </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+          <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.section}>
             <label className={styles.label}>Nombre del viaje *</label>
             <input
@@ -162,7 +230,17 @@ export default function TripForm({ trip, places, onSave, onClose }) {
           <div className={styles.section}>
             <div className={styles.sectionTop}>
               <label className={styles.label}>Lugares y días asignados</label>
-              <span className={styles.count}>{selectedCount} seleccionados</span>
+              <div className={styles.sectionTopRight}>
+                <span className={styles.count}>{selectedCount} seleccionados</span>
+                <button
+                  type="button"
+                  className={styles.selectAllBtn}
+                  onClick={toggleAll}
+                  disabled={isSaving || places.length === 0}
+                >
+                  {allSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                </button>
+              </div>
             </div>
             <p className={styles.helper}>Podés repetir un lugar en varios días separando los números con coma.</p>
 
@@ -241,13 +319,68 @@ export default function TripForm({ trip, places, onSave, onClose }) {
             </div>
           </div>
 
+          <div className={styles.section}>
+            <div className={styles.sectionTop}>
+              <label className={styles.label}>Items de tiempo muerto</label>
+              <span className={styles.count}>Opcional</span>
+            </div>
+            <p className={styles.helper}>Agregá actividades que no son lugares del mapa. Si no ponés día, aparecen solo en "Todos los días".</p>
+
+            <div className={styles.extraRow}>
+              <input
+                className={styles.input}
+                value={extraText}
+                disabled={isSaving}
+                onChange={(e) => setExtraText(e.target.value)}
+                placeholder="Ej: merienda / descanso / revisar reservas"
+              />
+              <input
+                className={styles.dayInput}
+                type="number"
+                min="1"
+                value={extraDay}
+                disabled={isSaving}
+                onChange={(e) => setExtraDay(e.target.value)}
+                placeholder="Día"
+              />
+              <button
+                type="button"
+                className={styles.selectAllBtn}
+                disabled={isSaving || !extraText.trim()}
+                onClick={addExtraItem}
+              >
+                + Agregar
+              </button>
+            </div>
+
+            {extraItems.length > 0 && (
+              <div className={styles.extraList}>
+                {extraItems.map((item) => (
+                  <div key={item.id} className={styles.extraItem}>
+                    <span className={styles.extraItemText}>{item.text}</span>
+                    <span className={styles.extraItemDay}>{item.day ? `Día ${item.day}` : 'Sin día'}</span>
+                    <button
+                      type="button"
+                      className={styles.extraItemDelete}
+                      disabled={isSaving}
+                      onClick={() => removeExtraItem(item.id)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className={styles.footer}>
             <button type="button" className={styles.btnCancel} disabled={isSaving} onClick={onClose}>Cancelar</button>
             <button type="submit" className={styles.btnSave} disabled={isSaving}>
               {isSaving ? 'Guardando...' : (trip ? 'Guardar viaje' : 'Crear viaje')}
             </button>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   )

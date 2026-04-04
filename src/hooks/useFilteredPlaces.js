@@ -1,6 +1,21 @@
 import { useMemo } from 'react'
 import { movePlaceToStart, movePlaceToEnd, pinPlaceAtBothEnds } from '../utils/routeHelpers'
 
+function hasAssignedDay(value) {
+  return value != null && value !== '' && !Number.isNaN(Number(value))
+}
+
+function matchesActiveDay(itemDay, activeTripDay) {
+  if (activeTripDay === 'Todos') return true
+  if (activeTripDay === 'sin-dia') return !hasAssignedDay(itemDay)
+  return Number(itemDay) === Number(activeTripDay)
+}
+
+function toSortValue(value, fallback) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
 export function useFilteredPlaces({ places, activeTripId, trips, search, activeFilter, activeTripDay }) {
   const activeTrip = useMemo(
     () => trips.find((t) => t.id === activeTripId) || null,
@@ -45,29 +60,91 @@ export function useFilteredPlaces({ places, activeTripId, trips, search, activeF
     return [...new Set(activeTrip.items.map((i) => Number(i.day)).filter(Boolean))].sort((a, b) => a - b)
   }, [activeTrip])
 
+  const hasUnassignedDay = useMemo(() => {
+    if (!activeTrip?.items?.length) return false
+    return activeTrip.items.some((i) => i.day == null || i.day === '' || Number.isNaN(Number(i.day)))
+  }, [activeTrip])
+
   const filtered = useMemo(() => {
     if (!activeTrip) return bySearchAndCategory
 
-    const allowed = new Set(
-      activeTrip.items
-        .filter((item) => activeTripDay === 'Todos' || Number(item.day) === Number(activeTripDay))
-        .map((item) => item.placeId)
-    )
+    const placesById = new Map(bySearchAndCategory.map((place) => [place.id, place]))
 
-    return bySearchAndCategory.filter((p) => allowed.has(p.id))
+    if (activeTripDay === 'Todos') {
+      // No specific day: deduplicate by placeId, keep original category/search order
+      const allowed = new Set(activeTrip.items.map((item) => item.placeId))
+      return bySearchAndCategory.filter((p) => allowed.has(p.id))
+    }
+
+    const seenPlaceIds = new Set()
+    return activeTrip.items
+      .filter((item) => {
+        if (!matchesActiveDay(item.day, activeTripDay)) return false
+        if (seenPlaceIds.has(item.placeId)) return false
+        seenPlaceIds.add(item.placeId)
+        return true
+      })
+      .map((item) => placesById.get(item.placeId))
+      .filter(Boolean)
   }, [bySearchAndCategory, activeTrip, activeTripDay])
+
+  const itineraryEntries = useMemo(() => {
+    if (!activeTrip || activeTripDay === 'Todos') return []
+
+    const placesById = new Map(bySearchAndCategory.map((place) => [place.id, place]))
+    const extras = activeTrip.extraItems || activeTrip.dayItems || []
+
+    const placeEntries = []
+    const seenPlaceIds = new Set()
+
+    ;(activeTrip.items || []).forEach((item, index) => {
+      if (!matchesActiveDay(item.day, activeTripDay)) return
+      if (seenPlaceIds.has(item.placeId)) return
+      const place = placesById.get(item.placeId)
+      if (!place) return
+      seenPlaceIds.add(item.placeId)
+      placeEntries.push({
+        kind: 'place',
+        key: `place-${item.placeId}`,
+        place,
+        placeId: item.placeId,
+        day: item.day,
+        sort: toSortValue(item.sort, index),
+        sourceIndex: index,
+      })
+    })
+
+    const q = search.toLowerCase().trim()
+    const extraEntries = extras
+      .map((item, index) => ({ ...item, sourceIndex: index }))
+      .filter((item) => matchesActiveDay(item.day, activeTripDay))
+      .filter((item) => {
+        const text = (item.text || '').toLowerCase()
+        return !q || text.includes(q)
+      })
+      .map((item, index) => ({
+        kind: 'extra',
+        key: `extra-${item.id || item.sourceIndex}`,
+        id: item.id || `legacy-${item.sourceIndex}`,
+        text: item.text || '',
+        day: item.day,
+        sort: toSortValue(item.sort, placeEntries.length + index),
+        sourceIndex: item.sourceIndex,
+      }))
+
+    return [...placeEntries, ...extraEntries].sort((a, b) => {
+      if (a.sort !== b.sort) return a.sort - b.sort
+      if (a.kind !== b.kind) return a.kind === 'place' ? -1 : 1
+      return a.sourceIndex - b.sourceIndex
+    })
+  }, [activeTrip, activeTripDay, bySearchAndCategory, search])
 
   const routePlaces = useMemo(() => {
     if (!activeTrip) return filtered
 
-    const placesById = new Map(filtered.map((place) => [place.id, place]))
-    const orderedPlaces = [...activeTrip.items]
-      .filter((item) => activeTripDay === 'Todos' || Number(item.day) === Number(activeTripDay))
-      .sort((a, b) => Number(a.day) - Number(b.day))
-      .map((item) => placesById.get(item.placeId))
-      .filter(Boolean)
-
-    let nextRoutePlaces = orderedPlaces
+    let nextRoutePlaces = activeTripDay === 'Todos'
+      ? filtered
+      : itineraryEntries.filter((entry) => entry.kind === 'place').map((entry) => entry.place)
 
     if (activeTrip.startPlaceId) {
       nextRoutePlaces = movePlaceToStart(nextRoutePlaces, activeTrip.startPlaceId)
@@ -80,7 +157,27 @@ export function useFilteredPlaces({ places, activeTripId, trips, search, activeF
     }
 
     return nextRoutePlaces
-  }, [filtered, activeTrip, activeTripDay])
+  }, [filtered, itineraryEntries, activeTrip, activeTripDay])
+
+  const dayExtras = useMemo(() => {
+    if (!activeTrip) return []
+
+    const extras = activeTrip.extraItems || activeTrip.dayItems || []
+    const q = search.toLowerCase().trim()
+
+    return extras.filter((item) => {
+      const text = (item.text || '').toLowerCase()
+      if (q && !text.includes(q)) return false
+
+      if (activeTripDay === 'Todos') return true
+
+      if (activeTripDay === 'sin-dia') {
+        return item.day == null || item.day === '' || Number.isNaN(Number(item.day))
+      }
+
+      return Number(item.day) === Number(activeTripDay)
+    })
+  }, [activeTrip, activeTripDay, search])
 
   const categoryCounts = useMemo(() => {
     const counts = {}
@@ -97,5 +194,5 @@ export function useFilteredPlaces({ places, activeTripId, trips, search, activeF
     return counts
   }, [places, activeTrip])
 
-  return { activeTrip, bySearchAndTrip, filtered, routePlaces, categoryCounts, tripDays }
+  return { activeTrip, bySearchAndTrip, filtered, routePlaces, itineraryEntries, dayExtras, categoryCounts, tripDays, hasUnassignedDay }
 }

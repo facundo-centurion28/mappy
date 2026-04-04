@@ -22,6 +22,7 @@ export default function FilterBar({
   activeTripDay,
   onTripDayChange,
   tripDays,
+  hasUnassignedDay,
 }) {
   const [showQuickFilters, setShowQuickFilters] = useState(false)
   const [showTripFilters, setShowTripFilters] = useState(false)
@@ -154,6 +155,14 @@ export default function FilterBar({
                       Día {day}
                     </button>
                   ))}
+                  {hasUnassignedDay && (
+                    <button
+                      className={`${styles.dayBtn} ${activeTripDay === 'sin-dia' ? styles.dayBtnActive : ''}`}
+                      onClick={() => onTripDayChange('sin-dia')}
+                    >
+                      Sin día
+                    </button>
+                  )}
                 </div>
               </div>
             )}

@@ -17,8 +17,13 @@
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
+  overflow: hidden;
+}
+
+.modalScroll {
+  max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
+  -webkit-overflow-scrolling: touch;
 }
 
 .header {

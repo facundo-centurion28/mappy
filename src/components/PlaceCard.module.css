@@ -145,7 +145,6 @@
   padding: 4px 10px;
   border-radius: 999px;
   letter-spacing: 0.02em;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
 .body {
@@ -240,6 +239,13 @@
   background: var(--success-soft);
   border-color: var(--success-border);
   color: var(--success-text);
+}
+
+.cardActionRoute {
+  background: var(--accent-light);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  color: var(--accent-dark);
+  font-weight: 700;
 }
 
 @media (max-width: 600px) {

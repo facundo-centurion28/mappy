@@ -25,17 +25,18 @@ export default function PlaceDetail({ place, onClose, onEdit, onDelete, onToggle
   return (
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
-        <div className={styles.media}>
-          {place.imageUrl ? (
-            <img src={place.imageUrl} alt={place.name} className={styles.img}
-              onError={e => { e.target.style.display = 'none' }} />
-          ) : (
-            <div className={styles.emoji}>{getPlaceEmoji(place)}</div>
-          )}
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">×</button>
-        </div>
+        <div className={styles.modalScroll}>
+          <div className={styles.media}>
+            {place.imageUrl ? (
+              <img src={place.imageUrl} alt={place.name} className={styles.img}
+                onError={e => { e.target.style.display = 'none' }} />
+            ) : (
+              <div className={styles.emoji}>{getPlaceEmoji(place)}</div>
+            )}
+            <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">×</button>
+          </div>
 
-        <div className={styles.content}>
+          <div className={styles.content}>
           <div className={styles.topRow}>
             <span className={styles.badge} style={{ background: color.bg, color: color.text }}>
               {place.category}
@@ -109,6 +110,7 @@ export default function PlaceDetail({ place, onClose, onEdit, onDelete, onToggle
             <button className={styles.btnDelete} onClick={() => {
               if (window.confirm(`¿Eliminar "${place.name}"?`)) onDelete(place.id)
             }}>Eliminar</button>
+          </div>
           </div>
         </div>
       </div>

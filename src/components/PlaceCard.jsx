@@ -16,7 +16,7 @@ function formatPrice(price) {
   return `Hasta ${sym}${price.max}`
 }
 
-export default function PlaceCard({ place, onClick, onToggleFavorite, onToggleVisited, layout = 'grid' }) {
+export default function PlaceCard({ place, onClick, onToggleFavorite, onToggleVisited, onMoveUp, onMoveDown, layout = 'grid' }) {
   const color = CAT_COLORS[place.category] || CAT_COLORS.Otro
   const isList = layout === 'list'
 
@@ -52,8 +52,28 @@ export default function PlaceCard({ place, onClick, onToggleFavorite, onToggleVi
               {formatPrice(place.price || {})}
             </span>
           </div>
-          {(onToggleFavorite || onToggleVisited) && (
+          {(onToggleFavorite || onToggleVisited || onMoveUp || onMoveDown) && (
             <div className={styles.cardActions}>
+              {onMoveUp && (
+                <button
+                  className={`${styles.cardActionBtn} ${styles.cardActionRoute}`}
+                  onClick={e => { e.stopPropagation(); onMoveUp() }}
+                  title="Subir en la ruta"
+                  aria-label="Subir en la ruta"
+                >
+                  ↑
+                </button>
+              )}
+              {onMoveDown && (
+                <button
+                  className={`${styles.cardActionBtn} ${styles.cardActionRoute}`}
+                  onClick={e => { e.stopPropagation(); onMoveDown() }}
+                  title="Bajar en la ruta"
+                  aria-label="Bajar en la ruta"
+                >
+                  ↓
+                </button>
+              )}
               {onToggleFavorite && (
                 <button
                   className={`${styles.cardActionBtn} ${place.favorite ? styles.cardActionFav : ''}`}

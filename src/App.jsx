@@ -27,6 +27,34 @@ function getDefaultDayForNewTripItem(activeTrip, activeTripDay) {
   return maxDay
 }
 
+function hasAssignedDay(value) {
+  return value != null && value !== '' && !Number.isNaN(Number(value))
+}
+
+function matchesDayFilter(day, activeTripDay) {
+  if (activeTripDay === 'Todos') return true
+  if (activeTripDay === 'sin-dia') return !hasAssignedDay(day)
+  return Number(day) === Number(activeTripDay)
+}
+
+function toSortValue(value, fallback) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function getNextSortForDay(activeTrip, activeTripDay) {
+  if (!activeTrip) return 0
+  const placeSorts = (activeTrip.items || [])
+    .filter((item, index) => matchesDayFilter(item.day, activeTripDay) || (!hasAssignedDay(item.day) && activeTripDay === 'Todos'))
+    .map((item, index) => toSortValue(item.sort, index))
+  const extraSorts = (activeTrip.extraItems || activeTrip.dayItems || [])
+    .filter((item, index) => matchesDayFilter(item.day, activeTripDay) || (!hasAssignedDay(item.day) && activeTripDay === 'Todos'))
+    .map((item, index) => toSortValue(item.sort, placeSorts.length + index))
+
+  const maxSort = Math.max(-1, ...placeSorts, ...extraSorts)
+  return maxSort + 1
+}
+
 export default function App() {
   const { places, loading, addPlace, updatePlace, deletePlace } = usePlaces()
   const { trips, loadingTrips, addTrip, updateTrip, deleteTrip } = useTrips()
@@ -39,7 +67,6 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState('Todos')
   const [activeTripId, setActiveTripId] = useState('')
   const [activeTripDay, setActiveTripDay] = useState('Todos')
-  const [viewMode, setViewMode] = useState('grid')
   const [showForm, setShowForm] = useState(false)
   const [showTripForm, setShowTripForm] = useState(false)
   const [routeMode, setRouteMode] = useState('walking')
@@ -47,7 +74,7 @@ export default function App() {
   const [editingTrip, setEditingTrip] = useState(null)
   const [detailPlace, setDetailPlace] = useState(null)
 
-  const { activeTrip, bySearchAndTrip, filtered, routePlaces, categoryCounts, tripDays } =
+  const { activeTrip, bySearchAndTrip, filtered, routePlaces, itineraryEntries, dayExtras, categoryCounts, tripDays, hasUnassignedDay } =
     useFilteredPlaces({ places, activeTripId, trips, search, activeFilter, activeTripDay })
 
   useEffect(() => {
@@ -94,11 +121,13 @@ export default function App() {
         const ref = await addPlace(data)
 
         if (activeTrip && !activeTrip.items.some((item) => item.placeId === ref.id)) {
+          const newItemDay = getDefaultDayForNewTripItem(activeTrip, activeTripDay)
           const nextItems = [
             ...activeTrip.items,
             {
               placeId: ref.id,
-              day: getDefaultDayForNewTripItem(activeTrip, activeTripDay),
+              day: newItemDay,
+              sort: getNextSortForDay(activeTrip, newItemDay),
             },
           ]
 
@@ -145,15 +174,19 @@ export default function App() {
   }
 
   const handleTripSave = async (data) => {
-    if (editingTrip) {
-      await updateTrip(editingTrip.id, data)
-    } else {
-      const ref = await addTrip(data)
-      setActiveTripId(ref.id)
-      setActiveTripDay('Todos')
+    try {
+      if (editingTrip) {
+        await updateTrip(editingTrip.id, data)
+      } else {
+        const ref = await addTrip(data)
+        setActiveTripId(ref.id)
+        setActiveTripDay('Todos')
+      }
+      setEditingTrip(null)
+      setShowTripForm(false)
+    } catch {
+      window.alert('No se pudo guardar el viaje. Si agregaste items de tiempo muerto, revisá que las reglas de Firestore estén actualizadas.')
     }
-    setEditingTrip(null)
-    setShowTripForm(false)
   }
 
   const handleTripDelete = async () => {
@@ -169,8 +202,60 @@ export default function App() {
     setActiveTripDay('Todos')
   }
 
+  const handleMoveItineraryEntry = async (entry, swapWith) => {
+    if (!activeTrip || activeTripDay === 'Todos') return
+
+    const nextItems = [...(activeTrip.items || [])]
+    const nextExtraItems = [...(activeTrip.extraItems || activeTrip.dayItems || [])]
+
+    const findPlaceIndex = (placeId) => nextItems.findIndex(
+      (item) => item.placeId === placeId && matchesDayFilter(item.day, activeTripDay)
+    )
+
+    const findExtraIndex = (extraId) => nextExtraItems.findIndex(
+      (item) => item.id === extraId && matchesDayFilter(item.day, activeTripDay)
+    )
+
+    const entryPlaceIndex = entry.kind === 'place' ? findPlaceIndex(entry.placeId) : -1
+    const entryExtraIndex = entry.kind === 'extra' ? findExtraIndex(entry.id) : -1
+    const swapPlaceIndex = swapWith.kind === 'place' ? findPlaceIndex(swapWith.placeId) : -1
+    const swapExtraIndex = swapWith.kind === 'extra' ? findExtraIndex(swapWith.id) : -1
+
+    const entrySort = entry.kind === 'place'
+      ? toSortValue(nextItems[entryPlaceIndex]?.sort, entry.sourceIndex)
+      : toSortValue(nextExtraItems[entryExtraIndex]?.sort, entry.sourceIndex)
+
+    const swapSort = swapWith.kind === 'place'
+      ? toSortValue(nextItems[swapPlaceIndex]?.sort, swapWith.sourceIndex)
+      : toSortValue(nextExtraItems[swapExtraIndex]?.sort, swapWith.sourceIndex)
+
+    if (entry.kind === 'place' && entryPlaceIndex >= 0) nextItems[entryPlaceIndex] = { ...nextItems[entryPlaceIndex], sort: swapSort }
+    if (entry.kind === 'extra' && entryExtraIndex >= 0) nextExtraItems[entryExtraIndex] = { ...nextExtraItems[entryExtraIndex], sort: swapSort }
+    if (swapWith.kind === 'place' && swapPlaceIndex >= 0) nextItems[swapPlaceIndex] = { ...nextItems[swapPlaceIndex], sort: entrySort }
+    if (swapWith.kind === 'extra' && swapExtraIndex >= 0) nextExtraItems[swapExtraIndex] = { ...nextExtraItems[swapExtraIndex], sort: entrySort }
+
+    try {
+      await updateTrip(activeTrip.id, {
+        items: nextItems,
+        extraItems: nextExtraItems,
+        startPlaceId: activeTrip.startPlaceId || '',
+        endPlaceId: activeTrip.endPlaceId || '',
+      })
+    } catch {
+      window.alert('No se pudo reordenar la ruta del día. Revisá la conexión e intentá de nuevo.')
+    }
+  }
+
+  const visibleCount = activeTrip && activeTripDay !== 'Todos'
+    ? itineraryEntries.length
+    : (filtered.length + (activeTrip ? dayExtras.length : 0))
+
   return (
     <div className={styles.app}>
+      <div className={styles.bgGlow} aria-hidden="true">
+        <div className={styles.bgGlow1} />
+        <div className={styles.bgGlow2} />
+      </div>
       <AppHeader
         themeMode={themeMode}
         onToggleTheme={() => setThemeMode(m => m === 'dark' ? 'light' : 'dark')}
@@ -198,6 +283,7 @@ export default function App() {
           activeTripDay={activeTripDay}
           onTripDayChange={setActiveTripDay}
           tripDays={tripDays}
+          hasUnassignedDay={hasUnassignedDay}
         />
 
         {loading ? (
@@ -205,7 +291,7 @@ export default function App() {
             <span className={styles.emptyIcon}>⏳</span>
             <p>Cargando lugares...</p>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : visibleCount === 0 ? (
           <div className={styles.empty}>
             <span className={styles.emptyIcon}>🗺️</span>
             <p>{search || activeFilter !== 'Todos' ? 'No hay lugares que coincidan.' : '¡Todavía no tenés lugares guardados!'}</p>
@@ -229,34 +315,79 @@ export default function App() {
             <div className={styles.listPanel}>
               <div className={styles.listToolbar}>
                 <p className={styles.listToolbarInfo}>
-                  {filtered.length} de {places.length} {places.length === 1 ? 'lugar' : 'lugares'}
+                  {visibleCount} items visibles · {filtered.length} de {places.length} {places.length === 1 ? 'lugar' : 'lugares'}
                 </p>
-                <div className={styles.viewModes}>
-                  <button
-                    className={`${styles.viewModeBtn} ${viewMode === 'grid' ? styles.viewModeBtnActive : ''}`}
-                    onClick={() => setViewMode('grid')}
-                  >
-                    Cards
-                  </button>
-                  <button
-                    className={`${styles.viewModeBtn} ${viewMode === 'list' ? styles.viewModeBtnActive : ''}`}
-                    onClick={() => setViewMode('list')}
-                  >
-                    Lista
-                  </button>
-                </div>
               </div>
-              <div className={`${styles.grid} ${viewMode === 'list' ? styles.gridList : ''}`}>
-                {filtered.map(place => (
-                  <PlaceCard
-                    key={place.id}
-                    place={place}
-                    layout={viewMode}
-                    onClick={setDetailPlace}
-                    onToggleFavorite={handleToggleFavorite}
-                    onToggleVisited={handleToggleVisited}
-                  />
-                ))}
+              <div className={`${styles.grid} ${styles.gridList}`}>
+                {activeTrip && activeTripDay !== 'Todos' ? (
+                  itineraryEntries.map((entry, index) => {
+                    if (entry.kind === 'place') {
+                      return (
+                        <PlaceCard
+                          key={entry.key}
+                          place={entry.place}
+                          layout="list"
+                          onClick={setDetailPlace}
+                          onToggleFavorite={handleToggleFavorite}
+                          onToggleVisited={handleToggleVisited}
+                          onMoveUp={index > 0 ? () => handleMoveItineraryEntry(entry, itineraryEntries[index - 1]) : null}
+                          onMoveDown={index < itineraryEntries.length - 1 ? () => handleMoveItineraryEntry(entry, itineraryEntries[index + 1]) : null}
+                        />
+                      )
+                    }
+
+                    return (
+                      <article key={entry.key} className={styles.extraDayCard}>
+                        <div className={styles.extraDayIcon}>🕒</div>
+                        <div className={styles.extraDayBody}>
+                          <p className={styles.extraDayTitle}>{entry.text}</p>
+                          <p className={styles.extraDayMeta}>{entry.day ? `Día ${entry.day}` : 'Sin día asignado'}</p>
+                        </div>
+                        <div className={styles.extraDayActions}>
+                          <button
+                            className={styles.extraDayMoveBtn}
+                            onClick={() => handleMoveItineraryEntry(entry, itineraryEntries[index - 1])}
+                            disabled={index === 0}
+                            title="Subir en el itinerario"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            className={styles.extraDayMoveBtn}
+                            onClick={() => handleMoveItineraryEntry(entry, itineraryEntries[index + 1])}
+                            disabled={index === itineraryEntries.length - 1}
+                            title="Bajar en el itinerario"
+                          >
+                            ↓
+                          </button>
+                        </div>
+                      </article>
+                    )
+                  })
+                ) : (
+                  <>
+                    {filtered.map((place) => (
+                      <PlaceCard
+                        key={place.id}
+                        place={place}
+                        layout="list"
+                        onClick={setDetailPlace}
+                        onToggleFavorite={handleToggleFavorite}
+                        onToggleVisited={handleToggleVisited}
+                      />
+                    ))}
+
+                    {activeTrip && dayExtras.map((item) => (
+                      <article key={`extra-${item.id}`} className={styles.extraDayCard}>
+                        <div className={styles.extraDayIcon}>🕒</div>
+                        <div className={styles.extraDayBody}>
+                          <p className={styles.extraDayTitle}>{item.text}</p>
+                          <p className={styles.extraDayMeta}>{item.day ? `Día ${item.day}` : 'Sin día asignado'}</p>
+                        </div>
+                      </article>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -264,7 +395,7 @@ export default function App() {
       </main>
 
         <footer className={styles.footer}>
-          <p className={styles.footerText}>Hecho por Facu para viajar con Yosi - 2026</p>
+          <p className={styles.footerText}>Hecho por Facu para viajar con Yosi ❤️ - 2026</p>
         </footer>
 
       {showForm && (

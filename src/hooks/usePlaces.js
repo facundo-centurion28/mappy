@@ -6,15 +6,42 @@ import {
 import { db } from '../lib/firebase'
 
 const COL = 'places'
+const CACHE_KEY = 'mappy-places-cache-v1'
+
+function readPlacesCache() {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function writePlacesCache(items) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(items))
+  } catch {
+    // ignore storage errors
+  }
+}
 
 export function usePlaces() {
-  const [places, setPlaces] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [places, setPlaces] = useState(() => readPlacesCache())
+  const [loading, setLoading] = useState(() => readPlacesCache().length === 0)
 
   useEffect(() => {
     const q = query(collection(db, COL), orderBy('createdAt', 'desc'))
     const unsub = onSnapshot(q, (snap) => {
-      setPlaces(snap.docs.map(d => ({ ...d.data(), id: d.id })))
+      const nextPlaces = snap.docs.map(d => ({ ...d.data(), id: d.id }))
+      setPlaces(nextPlaces)
+      writePlacesCache(nextPlaces)
+      setLoading(false)
+    }, () => {
+      // If Firestore fails (offline/rules), keep local cached data.
       setLoading(false)
     })
     return unsub

@@ -114,12 +114,13 @@ export default function PlaceForm({ place, onSave, onClose }) {
   return (
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>{place ? 'Editar lugar' : 'Nuevo lugar'}</h2>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">×</button>
-        </div>
+        <div className={styles.modalScroll}>
+          <div className={styles.header}>
+            <h2 className={styles.title}>{place ? 'Editar lugar' : 'Nuevo lugar'}</h2>
+            <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">×</button>
+          </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+          <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.section}>
             <label className={styles.label}>Nombre *</label>
             <input
@@ -308,7 +309,8 @@ export default function PlaceForm({ place, onSave, onClose }) {
               {place ? 'Guardar cambios' : 'Agregar lugar'}
             </button>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   )
