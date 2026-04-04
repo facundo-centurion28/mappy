@@ -218,6 +218,7 @@ export default function PlaceForm({ place, onSave, onClose }) {
                   onChange={e => setPrice('currency', e.target.value)}
                   disabled={form.price.free === true}>
                   <option value="UYU">UYU</option>
+                  <option value="ARS">ARS</option>
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
                 </select>

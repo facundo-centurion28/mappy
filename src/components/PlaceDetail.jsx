@@ -9,7 +9,7 @@ function formatPrice(price) {
 
   if (!hasMin && !hasMax) return 'Sin precio'
 
-  const sym = price.currency === 'USD' ? 'U$S ' : price.currency === 'EUR' ? '€' : '$'
+  const sym = price.currency === 'USD' ? 'U$S ' : price.currency === 'EUR' ? '€' : price.currency === 'ARS' ? '$AR ' : '$'
 
   if (hasMin && hasMax && Number(price.min) === 0 && Number(price.max) === 0) return 'Precio no especificado'
   if (hasMin && hasMax && Number(price.min) === Number(price.max)) return `${sym}${price.min}`
@@ -68,6 +68,10 @@ export default function PlaceDetail({ place, onClose, onEdit, onDelete, onToggle
             <div className={styles.infoCard}>
               <span className={styles.infoLabel}>Precio</span>
               <span className={styles.infoVal}>{formatPrice(place.price)}</span>
+            </div>
+            <div className={`${styles.infoCard} ${styles.infoCardWide}`}>
+              <span className={styles.infoLabel}>Dirección</span>
+              <span className={styles.infoVal}>{place.address || 'No especificada'}</span>
             </div>
           </div>
 

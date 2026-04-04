@@ -103,19 +103,90 @@
   margin-bottom: 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(4px);
-  padding: 16px;
+  padding: 14px;
   animation: riseIn 0.35s ease;
+}
+
+.controlBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+}
+
+.controlLabel {
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.accordionHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-strong);
+  color: var(--ink-soft);
+  padding: 9px 12px;
+  text-align: left;
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+
+.accordionHeader:hover {
+  border-color: var(--border-strong);
+}
+
+.accordionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.accordionChevron {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  background-color: var(--ink-muted);
+  -webkit-mask-image: url('/img/arrow.svg');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: 14px 14px;
+  mask-image: url('/img/arrow.svg');
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: 14px 14px;
+  opacity: 0.9;
+  transition: transform 0.16s ease;
+}
+
+.accordionChevronOpen {
+  transform: rotate(180deg);
+}
+
+.accordionContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 2px 0;
 }
 
 .search {
   width: 100%;
-  max-width: 560px;
+  max-width: 100%;
   padding: 12px 16px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
@@ -132,6 +203,34 @@
 }
 .search::placeholder { color: var(--ink-muted); }
 
+.viewModes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.viewModeBtn {
+  border: 1px solid var(--border);
+  background: var(--panel-strong);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.16s ease;
+}
+
+.viewModeBtn:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.viewModeBtnActive {
+  background: var(--ink);
+  color: var(--cream);
+  border-color: var(--ink);
+}
+
 .filters {
   display: flex;
   gap: 8px;
@@ -139,10 +238,10 @@
 }
 
 .tripControls {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px;
-  align-items: flex-end;
-  flex-wrap: wrap;
+  align-items: end;
 }
 
 .tripSelectWrap {
@@ -188,6 +287,7 @@
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  align-self: end;
 }
 
 .tripBtn {
@@ -225,6 +325,12 @@
 .dayFilters {
   display: flex;
   flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dayFiltersWrap {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
 }
 
@@ -298,6 +404,11 @@
   gap: 18px;
 }
 
+.gridList {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
 .splitLayout {
   display: flex;
   gap: 22px;
@@ -318,6 +429,26 @@
   flex: 1 1 0;
   min-width: 0;
   overflow-y: auto;
+}
+
+.listToolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+}
+
+.listToolbarInfo {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .empty {
@@ -358,6 +489,22 @@
   box-shadow: var(--shadow-sm);
 }
 
+.footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 24px 26px;
+  border-top: 1px solid var(--border);
+}
+
+.footerText {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 @keyframes riseIn {
   from {
     opacity: 0;
@@ -376,10 +523,24 @@
   .headerActions { gap: 8px; }
   .themeToggle { padding: 9px 12px; font-size: 12px; }
   .main { padding: 20px 16px 40px; }
-  .controls { padding: 14px; }
+  .footer { padding: 12px 16px 20px; }
+  .footerText { font-size: 11px; letter-spacing: 0.03em; }
+  .controls { padding: 12px; }
+  .controlBlock { padding: 9px; }
   .grid { grid-template-columns: 1fr; }
   .splitLayout { flex-direction: column; gap: 16px; }
   .mapPanel { position: static; flex: none; width: 100%; height: 300px; }
+  .listToolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 9px 10px;
+  }
+  .listToolbarInfo {
+    text-align: center;
+  }
+  .viewModes {
+    justify-content: center;
+  }
   .listPanel {
     width: 100%;
     flex: none;

@@ -12,6 +12,96 @@
   border-color: rgba(0, 141, 137, 0.2);
 }
 
+.cardList {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: stretch;
+  gap: 0;
+  border-radius: var(--radius-md);
+}
+
+.cardList:hover {
+  transform: translateY(-1px);
+}
+
+.cardList .media {
+  flex: none;
+  width: 56px;
+  height: 100%;
+  min-height: 56px;
+  border-radius: calc(var(--radius-md) - 1px) 0 0 calc(var(--radius-md) - 1px);
+}
+
+.cardList .emoji {
+  font-size: 24px;
+}
+
+.cardList .badge {
+  display: none;
+}
+
+.cardList .body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 0;
+  padding: 9px 12px;
+  min-width: 0;
+}
+
+.cardList .name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.cardList .desc {
+  display: none;
+}
+
+.cardList .metaRow {
+  grid-column: 1;
+  grid-row: 2;
+  margin-top: 3px;
+  flex-wrap: nowrap;
+}
+
+.cardList .meta {
+  gap: 6px;
+}
+
+.cardList .metaItem {
+  font-size: 11px;
+  padding: 2px 7px;
+}
+
+.cardList .cardActions {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardList .cardActionBtn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
 .media {
   position: relative;
   height: 170px;
@@ -75,10 +165,20 @@
   margin-bottom: 14px;
 }
 
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
 .meta {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .metaItem {
@@ -99,17 +199,16 @@
 
 .cardActions {
   display: flex;
-  gap: 6px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .cardActionBtn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
-  padding: 4px 10px;
+  font-size: 13px;
+  padding: 5px 10px;
   border-radius: 999px;
   border: 1px solid var(--border-strong);
   background: var(--surface-soft);
@@ -134,4 +233,10 @@
   background: var(--success-soft);
   border-color: var(--success-border);
   color: var(--success-text);
+}
+
+@media (max-width: 600px) {
+  .cardList {
+    grid-template-columns: 56px 1fr auto;
+  }
 }

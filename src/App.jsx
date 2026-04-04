@@ -1,53 +1,30 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { usePlaces } from './hooks/usePlaces'
 import { useTrips } from './hooks/useTrips'
-import { CATEGORIES } from './data/places'
+import { useFilteredPlaces } from './hooks/useFilteredPlaces'
 import PlaceCard from './components/PlaceCard'
 import PlaceForm from './components/PlaceForm'
 import PlaceDetail from './components/PlaceDetail'
 import MapView from './components/MapView'
 import TripForm from './components/TripForm'
+import AppHeader from './components/AppHeader'
+import FilterBar from './components/FilterBar'
 import styles from './App.module.css'
 
-function movePlaceToStart(routePlaces, placeId) {
-  const index = routePlaces.findIndex((place) => place.id === placeId)
-  if (index <= 0) return routePlaces
-
-  const next = [...routePlaces]
-  const [place] = next.splice(index, 1)
-  next.unshift(place)
-  return next
-}
-
-function movePlaceToEnd(routePlaces, placeId) {
-  let index = -1
-
-  for (let i = routePlaces.length - 1; i >= 0; i -= 1) {
-    if (routePlaces[i].id === placeId) {
-      index = i
-      break
-    }
+function getDefaultDayForNewTripItem(activeTrip, activeTripDay) {
+  if (activeTripDay !== 'Todos') {
+    const selectedDay = Number(activeTripDay)
+    if (Number.isFinite(selectedDay) && selectedDay > 0) return selectedDay
   }
 
-  if (index === -1 || index === routePlaces.length - 1) return routePlaces
+  const maxDay = Math.max(
+    1,
+    ...(activeTrip?.items || [])
+      .map((item) => Number(item.day))
+      .filter((day) => Number.isFinite(day) && day > 0)
+  )
 
-  const next = [...routePlaces]
-  const [place] = next.splice(index, 1)
-  next.push(place)
-  return next
-}
-
-function pinPlaceAtBothEnds(routePlaces, placeId) {
-  const place = routePlaces.find((item) => item.id === placeId)
-
-  if (!place) return routePlaces
-
-  const middlePlaces = routePlaces.filter((item, index) => {
-    if (item.id !== placeId) return true
-    return index !== 0 && index !== routePlaces.length - 1
-  })
-
-  return [place, ...middlePlaces, place]
+  return maxDay
 }
 
 export default function App() {
@@ -62,6 +39,7 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState('Todos')
   const [activeTripId, setActiveTripId] = useState('')
   const [activeTripDay, setActiveTripDay] = useState('Todos')
+  const [viewMode, setViewMode] = useState('grid')
   const [showForm, setShowForm] = useState(false)
   const [showTripForm, setShowTripForm] = useState(false)
   const [routeMode, setRouteMode] = useState('walking')
@@ -69,107 +47,13 @@ export default function App() {
   const [editingTrip, setEditingTrip] = useState(null)
   const [detailPlace, setDetailPlace] = useState(null)
 
+  const { activeTrip, bySearchAndTrip, filtered, routePlaces, categoryCounts, tripDays } =
+    useFilteredPlaces({ places, activeTripId, trips, search, activeFilter, activeTripDay })
+
   useEffect(() => {
     document.documentElement.dataset.theme = themeMode
     localStorage.setItem('mappy-theme', themeMode)
   }, [themeMode])
-
-  const bySearchAndCategory = useMemo(() => {
-    const q = search.toLowerCase()
-    return places.filter(p => {
-      const matchCat = activeFilter === 'Todos'
-        || p.category === activeFilter
-        || (activeFilter === 'Favoritos' && p.favorite === true)
-        || (activeFilter === 'Visitados' && p.visited === true)
-      const matchQ = !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q) ||
-        p.tags?.some(t => t.includes(q))
-      return matchCat && matchQ
-    })
-  }, [places, search, activeFilter])
-
-  const activeTrip = useMemo(
-    () => trips.find((t) => t.id === activeTripId) || null,
-    [trips, activeTripId]
-  )
-
-  // Contar "Todos" con búsqueda + viaje, pero sin filtro de categoría
-  const bySearchAndTrip = useMemo(() => {
-    const q = search.toLowerCase()
-    let result = places.filter(p => {
-      const matchQ = !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q) ||
-        p.tags?.some(t => t.includes(q))
-      return matchQ
-    })
-
-    if (activeTrip) {
-      const allowed = new Set(activeTrip.items.map(item => item.placeId))
-      result = result.filter(p => allowed.has(p.id))
-    }
-
-    return result
-  }, [places, search, activeTrip])
-
-  const tripDays = useMemo(() => {
-    if (!activeTrip?.items?.length) return []
-    return [...new Set(activeTrip.items.map((i) => Number(i.day)).filter(Boolean))].sort((a, b) => a - b)
-  }, [activeTrip])
-
-  const filtered = useMemo(() => {
-    if (!activeTrip) return bySearchAndCategory
-
-    const allowed = new Set(
-      activeTrip.items
-        .filter((item) => activeTripDay === 'Todos' || Number(item.day) === Number(activeTripDay))
-        .map((item) => item.placeId)
-    )
-
-    return bySearchAndCategory.filter((p) => allowed.has(p.id))
-  }, [bySearchAndCategory, activeTrip, activeTripDay])
-
-  const routePlaces = useMemo(() => {
-    if (!activeTrip) return filtered
-
-    const placesById = new Map(filtered.map((place) => [place.id, place]))
-    const orderedPlaces = [...activeTrip.items]
-      .filter((item) => activeTripDay === 'Todos' || Number(item.day) === Number(activeTripDay))
-      .sort((a, b) => Number(a.day) - Number(b.day))
-      .map((item) => placesById.get(item.placeId))
-      .filter(Boolean)
-
-    let nextRoutePlaces = orderedPlaces
-
-    if (activeTrip.startPlaceId) {
-      nextRoutePlaces = movePlaceToStart(nextRoutePlaces, activeTrip.startPlaceId)
-    }
-
-    if (activeTrip.endPlaceId && activeTrip.endPlaceId === activeTrip.startPlaceId) {
-      nextRoutePlaces = pinPlaceAtBothEnds(nextRoutePlaces, activeTrip.startPlaceId)
-    } else if (activeTrip.endPlaceId) {
-      nextRoutePlaces = movePlaceToEnd(nextRoutePlaces, activeTrip.endPlaceId)
-    }
-
-    return nextRoutePlaces
-  }, [filtered, activeTrip, activeTripDay])
-
-  const categoryCounts = useMemo(() => {
-    const counts = {}
-    let source = places
-    
-    // Si hay un viaje activo, contar solo los lugares del viaje
-    if (activeTrip) {
-      const tripPlaceIds = new Set(activeTrip.items.map(item => item.placeId))
-      source = places.filter(p => tripPlaceIds.has(p.id))
-    }
-    
-    source.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1 })
-    counts['Favoritos'] = source.filter(p => p.favorite).length
-    counts['Visitados'] = source.filter(p => p.visited).length
-    return counts
-  }, [places, activeTrip])
 
   const handleToggleFavorite = async (place) => {
     try {
@@ -207,9 +91,25 @@ export default function App() {
       }
     } else {
       try {
-        await addPlace(data)
+        const ref = await addPlace(data)
+
+        if (activeTrip && !activeTrip.items.some((item) => item.placeId === ref.id)) {
+          const nextItems = [
+            ...activeTrip.items,
+            {
+              placeId: ref.id,
+              day: getDefaultDayForNewTripItem(activeTrip, activeTripDay),
+            },
+          ]
+
+          await updateTrip(activeTrip.id, {
+            items: nextItems,
+            startPlaceId: activeTrip.startPlaceId || '',
+            endPlaceId: activeTrip.endPlaceId || '',
+          })
+        }
       } catch {
-        window.alert('No se pudo crear el lugar. Revisá las reglas o la conexión.')
+        window.alert('No se pudo crear el lugar o agregarlo al viaje activo. Revisá las reglas o la conexión.')
         return
       }
     }
@@ -271,113 +171,35 @@ export default function App() {
 
   return (
     <div className={styles.app}>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <div className={styles.logoSection}>
-            <img src="/img/logo.png" alt="Mappy Logo" className={styles.logoImg} />
-            <div>
-              <h1 className={styles.logo}>Mappy</h1>
-              <p className={styles.tagline}>{places.length} {places.length === 1 ? 'lugar guardado' : 'lugares guardados'}</p>
-            </div>
-          </div>
-          <div className={styles.headerActions}>
-            <button
-              className={styles.themeToggle}
-              onClick={() => setThemeMode((current) => current === 'dark' ? 'light' : 'dark')}
-              aria-label={themeMode === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
-              title={themeMode === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
-            >
-              {themeMode === 'dark' ? '☀️ Claro' : '🌙 Oscuro'}
-            </button>
-            <button className={styles.btnAdd} onClick={openNew}>
-              + Agregar lugar
-            </button>
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        placesCount={places.length}
+        themeMode={themeMode}
+        onToggleTheme={() => setThemeMode(m => m === 'dark' ? 'light' : 'dark')}
+        onAddPlace={openNew}
+      />
 
       <main className={styles.main}>
-        <div className={styles.controls}>
-          <input
-            className={styles.search}
-            type="text"
-            placeholder="Buscar por nombre, descripción o etiqueta..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <div className={styles.filters}>
-            {['Todos', 'Favoritos', 'Visitados', ...CATEGORIES.map(c => c.label)].map(cat => {
-              const count = cat === 'Todos' ? bySearchAndTrip.length : (categoryCounts[cat] || 0)
-              const isSpecial = cat === 'Todos' || cat === 'Favoritos' || cat === 'Visitados'
-              if (!isSpecial && count === 0) return null
-              return (
-                <button
-                  key={cat}
-                  className={`${styles.filterBtn} ${activeFilter === cat ? styles.filterActive : ''}`}
-                  onClick={() => setActiveFilter(cat)}
-                >
-                  {cat === 'Favoritos' ? '⭐ ' : cat === 'Visitados' ? '✓ ' : ''}{cat}{count > 0 && <span className={styles.filterCount}>{count}</span>}
-                </button>
-              )
-            })}
-          </div>
-
-          <div className={styles.tripControls}>
-            <div className={styles.tripSelectWrap}>
-              <label className={styles.tripLabel}>Viaje</label>
-              <select
-                className={styles.tripSelect}
-                value={activeTripId}
-                disabled={loadingTrips}
-                onChange={(e) => handleTripChange(e.target.value)}
-              >
-                <option value="">Todos los lugares</option>
-                {trips.map((trip) => (
-                  <option key={trip.id} value={trip.id}>{trip.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className={styles.routeModeWrap}>
-              <label className={styles.tripLabel}>Trayecto</label>
-              <select
-                className={styles.routeModeSelect}
-                value={routeMode}
-                onChange={(e) => setRouteMode(e.target.value)}
-              >
-                <option value="none">Sin trayecto</option>
-                <option value="walking">Caminando</option>
-                <option value="driving">Auto</option>
-              </select>
-            </div>
-
-            <div className={styles.tripActions}>
-              <button className={styles.tripBtn} onClick={openTripNew}>+ Nuevo viaje</button>
-              <button className={styles.tripBtn} disabled={!activeTrip} onClick={openTripEdit}>Editar</button>
-              <button className={`${styles.tripBtn} ${styles.tripBtnDanger}`} disabled={!activeTrip} onClick={handleTripDelete}>Eliminar</button>
-            </div>
-          </div>
-
-          {activeTrip && (
-            <div className={styles.dayFilters}>
-              <button
-                className={`${styles.dayBtn} ${activeTripDay === 'Todos' ? styles.dayBtnActive : ''}`}
-                onClick={() => setActiveTripDay('Todos')}
-              >
-                Todos los días
-              </button>
-              {tripDays.map((day) => (
-                <button
-                  key={day}
-                  className={`${styles.dayBtn} ${Number(activeTripDay) === day ? styles.dayBtnActive : ''}`}
-                  onClick={() => setActiveTripDay(day)}
-                >
-                  Día {day}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <FilterBar
+          search={search}
+          onSearchChange={setSearch}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          bySearchAndTrip={bySearchAndTrip}
+          categoryCounts={categoryCounts}
+          activeTripId={activeTripId}
+          onTripChange={handleTripChange}
+          loadingTrips={loadingTrips}
+          trips={trips}
+          routeMode={routeMode}
+          onRouteModeChange={setRouteMode}
+          onNewTrip={openTripNew}
+          activeTrip={activeTrip}
+          onEditTrip={openTripEdit}
+          onDeleteTrip={handleTripDelete}
+          activeTripDay={activeTripDay}
+          onTripDayChange={setActiveTripDay}
+          tripDays={tripDays}
+        />
 
         {loading ? (
           <div className={styles.empty}>
@@ -406,11 +228,31 @@ export default function App() {
               />
             </div>
             <div className={styles.listPanel}>
-              <div className={styles.grid}>
+              <div className={styles.listToolbar}>
+                <p className={styles.listToolbarInfo}>
+                  {filtered.length} {filtered.length === 1 ? 'lugar visible' : 'lugares visibles'}
+                </p>
+                <div className={styles.viewModes}>
+                  <button
+                    className={`${styles.viewModeBtn} ${viewMode === 'grid' ? styles.viewModeBtnActive : ''}`}
+                    onClick={() => setViewMode('grid')}
+                  >
+                    Cards
+                  </button>
+                  <button
+                    className={`${styles.viewModeBtn} ${viewMode === 'list' ? styles.viewModeBtnActive : ''}`}
+                    onClick={() => setViewMode('list')}
+                  >
+                    Lista
+                  </button>
+                </div>
+              </div>
+              <div className={`${styles.grid} ${viewMode === 'list' ? styles.gridList : ''}`}>
                 {filtered.map(place => (
                   <PlaceCard
                     key={place.id}
                     place={place}
+                    layout={viewMode}
                     onClick={setDetailPlace}
                     onToggleFavorite={handleToggleFavorite}
                     onToggleVisited={handleToggleVisited}
@@ -421,6 +263,10 @@ export default function App() {
           </div>
         )}
       </main>
+
+        <footer className={styles.footer}>
+          <p className={styles.footerText}>Hecho por Facu para viajar con Yosi - 2026</p>
+        </footer>
 
       {showForm && (
         <PlaceForm
