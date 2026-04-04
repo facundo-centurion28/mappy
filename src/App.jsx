@@ -172,7 +172,6 @@ export default function App() {
   return (
     <div className={styles.app}>
       <AppHeader
-        placesCount={places.length}
         themeMode={themeMode}
         onToggleTheme={() => setThemeMode(m => m === 'dark' ? 'light' : 'dark')}
         onAddPlace={openNew}
@@ -230,7 +229,7 @@ export default function App() {
             <div className={styles.listPanel}>
               <div className={styles.listToolbar}>
                 <p className={styles.listToolbarInfo}>
-                  {filtered.length} {filtered.length === 1 ? 'lugar visible' : 'lugares visibles'}
+                  {filtered.length} de {places.length} {places.length === 1 ? 'lugar' : 'lugares'}
                 </p>
                 <div className={styles.viewModes}>
                   <button
