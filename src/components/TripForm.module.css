@@ -71,7 +71,7 @@
 }
 
 .input {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   padding: 9px 12px;
@@ -101,7 +101,7 @@
 .list {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--surface);
   overflow: hidden;
 }
 
@@ -120,12 +120,12 @@
 }
 
 .rowSelected {
-  background: #edf5ef;
-  border-left: 3px solid #3D6B4F;
+  background: var(--selected-row-bg);
+  border-left: 3px solid var(--selected-row-border);
 }
 
 .rowUnselected {
-  background: #faf8f5;
+  background: var(--unselected-row-bg);
 }
 
 .placeLabel {
@@ -157,7 +157,7 @@
 
 .dayInput {
   width: 88px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   padding: 6px 8px;
@@ -182,7 +182,7 @@
 }
 
 .select {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   padding: 9px 12px;

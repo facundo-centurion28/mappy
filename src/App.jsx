@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { usePlaces } from './hooks/usePlaces'
 import { useTrips } from './hooks/useTrips'
 import { CATEGORIES } from './data/places'
@@ -53,6 +53,11 @@ function pinPlaceAtBothEnds(routePlaces, placeId) {
 export default function App() {
   const { places, loading, addPlace, updatePlace, deletePlace } = usePlaces()
   const { trips, loadingTrips, addTrip, updateTrip, deleteTrip } = useTrips()
+  const [themeMode, setThemeMode] = useState(() => {
+    const savedTheme = localStorage.getItem('mappy-theme')
+    if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState('Todos')
   const [activeTripId, setActiveTripId] = useState('')
@@ -63,6 +68,11 @@ export default function App() {
   const [editingPlace, setEditingPlace] = useState(null)
   const [editingTrip, setEditingTrip] = useState(null)
   const [detailPlace, setDetailPlace] = useState(null)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = themeMode
+    localStorage.setItem('mappy-theme', themeMode)
+  }, [themeMode])
 
   const bySearchAndCategory = useMemo(() => {
     const q = search.toLowerCase()
@@ -161,27 +171,47 @@ export default function App() {
     return counts
   }, [places, activeTrip])
 
-  const handleToggleFavorite = (place) => {
-    updatePlace(place.id, { favorite: !place.favorite })
-    if (detailPlace?.id === place.id) {
-      setDetailPlace(prev => ({ ...prev, favorite: !prev.favorite }))
+  const handleToggleFavorite = async (place) => {
+    try {
+      const nextFavorite = !place.favorite
+      await updatePlace(place.id, { favorite: nextFavorite })
+      if (detailPlace?.id === place.id) {
+        setDetailPlace(prev => ({ ...prev, favorite: nextFavorite }))
+      }
+    } catch {
+      window.alert('No se pudo guardar el favorito. Revisá las reglas o la conexión.')
     }
   }
 
-  const handleToggleVisited = (place) => {
-    updatePlace(place.id, { visited: !place.visited })
-    if (detailPlace?.id === place.id) {
-      setDetailPlace(prev => ({ ...prev, visited: !prev.visited }))
+  const handleToggleVisited = async (place) => {
+    try {
+      const nextVisited = !place.visited
+      await updatePlace(place.id, { visited: nextVisited })
+      if (detailPlace?.id === place.id) {
+        setDetailPlace(prev => ({ ...prev, visited: nextVisited }))
+      }
+    } catch {
+      window.alert('No se pudo guardar el estado de visitado. Revisá las reglas o la conexión.')
     }
   }
 
-  const handleSave = (data) => {
+  const handleSave = async (data) => {
     if (editingPlace) {
       const { id, ...updateData } = data
-      updatePlace(editingPlace.id, updateData)
-      setDetailPlace({ ...editingPlace, ...updateData })
+      try {
+        await updatePlace(editingPlace.id, updateData)
+        setDetailPlace({ ...editingPlace, ...updateData })
+      } catch {
+        window.alert('No se pudo guardar el lugar. Revisá las reglas o la conexión.')
+        return
+      }
     } else {
-      addPlace(data)
+      try {
+        await addPlace(data)
+      } catch {
+        window.alert('No se pudo crear el lugar. Revisá las reglas o la conexión.')
+        return
+      }
     }
     setShowForm(false)
     setEditingPlace(null)
@@ -250,9 +280,19 @@ export default function App() {
               <p className={styles.tagline}>{places.length} {places.length === 1 ? 'lugar guardado' : 'lugares guardados'}</p>
             </div>
           </div>
-          <button className={styles.btnAdd} onClick={openNew}>
-            + Agregar lugar
-          </button>
+          <div className={styles.headerActions}>
+            <button
+              className={styles.themeToggle}
+              onClick={() => setThemeMode((current) => current === 'dark' ? 'light' : 'dark')}
+              aria-label={themeMode === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+              title={themeMode === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+            >
+              {themeMode === 'dark' ? '☀️ Claro' : '🌙 Oscuro'}
+            </button>
+            <button className={styles.btnAdd} onClick={openNew}>
+              + Agregar lugar
+            </button>
+          </div>
         </div>
       </header>
 
@@ -359,6 +399,7 @@ export default function App() {
                 places={filtered}
                 routePlaces={routePlaces}
                 routeMode={routeMode}
+                themeMode={themeMode}
                 startPlaceId={activeTrip?.startPlaceId || ''}
                 endPlaceId={activeTrip?.endPlaceId || ''}
                 onSelectPlace={setDetailPlace}

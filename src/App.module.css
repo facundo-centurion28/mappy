@@ -4,8 +4,8 @@
 }
 
 .header {
-  background: rgba(246, 241, 232, 0.72);
-  border-bottom: 1px solid rgba(23, 19, 15, 0.08);
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
@@ -51,9 +51,32 @@
   object-fit: contain;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.themeToggle {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.themeToggle:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-strong);
+}
+
 .btnAdd {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  color: #fff;
+  color: var(--text-on-accent);
   border: none;
   border-radius: 999px;
   padding: 11px 20px;
@@ -81,8 +104,8 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background: rgba(255, 255, 255, 0.48);
-  border: 1px solid rgba(23, 19, 15, 0.08);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(4px);
@@ -97,7 +120,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   font-size: 14px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface-elevated);
   color: var(--ink);
   outline: none;
   transition: border-color 0.18s, box-shadow 0.18s;
@@ -142,7 +165,7 @@
   border-radius: var(--radius-sm);
   font-size: 14px;
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface-elevated);
 }
 
 .routeModeWrap {
@@ -158,7 +181,7 @@
   border-radius: var(--radius-sm);
   font-size: 14px;
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface-elevated);
 }
 
 .tripActions {
@@ -168,7 +191,7 @@
 }
 
 .tripBtn {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 8px 14px;
@@ -188,9 +211,15 @@
 }
 
 .tripBtnDanger {
-  color: #9E2A2A;
-  border-color: #e8c6c1;
-  background: #fff7f6;
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+  background: var(--danger-soft);
+}
+
+.tripBtnDanger:hover:not(:disabled) {
+  background: var(--danger-hover);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
 }
 
 .dayFilters {
@@ -201,7 +230,7 @@
 
 .dayBtn {
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--panel-strong);
   color: var(--ink-soft);
   border-radius: 20px;
   padding: 6px 12px;
@@ -228,14 +257,14 @@
   font-size: 13px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--panel-strong);
   color: var(--ink-soft);
   transition: all 0.16s ease;
 }
 
 .filterBtn:hover {
   border-color: var(--border-strong);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface-elevated);
   transform: translateY(-1px);
 }
 
@@ -246,14 +275,14 @@
 }
 
 .filterCount {
-  background: rgba(255,255,255,0.2);
+  background: var(--surface-chip-active);
   border-radius: 10px;
   padding: 0 5px;
   font-size: 11px;
 }
 
 .filterActive .filterCount {
-  background: rgba(255,255,255,0.2);
+  background: var(--surface-chip-active);
 }
 
 .filterBtn:not(.filterActive) .filterCount {
@@ -298,8 +327,8 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  border: 1px dashed rgba(23, 19, 15, 0.2);
-  background: rgba(255, 255, 255, 0.45);
+  border: 1px dashed var(--border-strong);
+  background: var(--panel-bg);
   border-radius: var(--radius-lg);
 }
 
@@ -314,7 +343,7 @@
 
 .btnAddEmpty {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  color: #fff;
+  color: var(--text-on-accent);
   border: none;
   border-radius: 999px;
   padding: 10px 22px;
@@ -344,6 +373,8 @@
   .headerInner { padding: 12px 16px; }
   .logo { font-size: 24px; }
   .btnAdd { padding: 9px 14px; font-size: 13px; }
+  .headerActions { gap: 8px; }
+  .themeToggle { padding: 9px 12px; font-size: 12px; }
   .main { padding: 20px 16px 40px; }
   .controls { padding: 14px; }
   .grid { grid-template-columns: 1fr; }

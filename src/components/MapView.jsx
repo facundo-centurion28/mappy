@@ -54,6 +54,7 @@ export default function MapView({
   places,
   routePlaces = places,
   routeMode = 'walking',
+  themeMode = 'light',
   startPlaceId = '',
   endPlaceId = '',
   onSelectPlace,
@@ -162,7 +163,9 @@ export default function MapView({
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url={themeMode === 'dark'
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
         />
         <MapViewport markerPoints={markerPoints} routePoints={routeLine} />
         {routeLine.length > 1 && (
@@ -178,11 +181,11 @@ export default function MapView({
             <Popup>
               <strong>{getPlaceEmoji(place)} {place.name}</strong>
               <br />
-              <span style={{ fontSize: '12px', color: '#666' }}>{place.category}</span>
+              <span style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>{place.category}</span>
               {getMarkerMeta(place.id) && (
                 <>
                   <br />
-                  <span style={{ fontSize: '12px', color: '#008D89', fontWeight: 600 }}>{getMarkerMeta(place.id)}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 600 }}>{getMarkerMeta(place.id)}</span>
                 </>
               )}
             </Popup>

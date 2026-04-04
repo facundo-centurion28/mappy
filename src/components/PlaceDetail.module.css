@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(26, 23, 20, 0.5);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,7 +48,7 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(247, 244, 238, 0.9);
+  background: var(--surface-overlay);
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -62,7 +62,7 @@
   transition: background 0.15s;
 }
 
-.closeBtn:hover { background: #fff; }
+.closeBtn:hover { background: var(--surface); }
 
 .content {
   padding: 20px 24px 24px;
@@ -116,7 +116,7 @@
 }
 
 .infoCard {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 12px 14px;
@@ -176,8 +176,8 @@
   flex: 1;
   padding: 9px 14px;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(23, 19, 15, 0.15);
-  background: rgba(255,255,255,0.8);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-soft);
   color: var(--ink-muted);
   font-size: 13px;
   cursor: pointer;
@@ -191,15 +191,15 @@
 }
 
 .toggleBtnFav {
-  background: #FFF8E1;
-  border-color: #F5A623;
-  color: #B8750A;
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
 }
 
 .toggleBtnVisited {
-  background: #E8F5E9;
-  border-color: #66BB6A;
-  color: #2E7D32;
+  background: var(--success-soft);
+  border-color: var(--success-border);
+  color: var(--success-text);
 }
 
 .btnEdit {
@@ -216,14 +216,17 @@
 .btnEdit:hover { background: rgba(0, 141, 137, 0.1); }
 
 .btnDelete {
-  background: #FFF0EE;
-  color: #9E2A2A;
-  border: none;
+  background: var(--danger-soft-strong);
+  color: var(--danger-text);
+  border: 1px solid var(--danger-border);
   border-radius: var(--radius-sm);
   padding: 10px 18px;
   font-size: 14px;
   font-weight: 500;
-  transition: opacity 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.btnDelete:hover { opacity: 0.8; }
+.btnDelete:hover {
+  background: var(--danger-hover);
+  border-color: var(--danger-border);
+}

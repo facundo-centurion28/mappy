@@ -32,19 +32,114 @@
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 24px;
+
+  --page-bg: var(--cream);
+  --page-glow-1: rgba(0, 141, 137, 0.12);
+  --page-glow-2: rgba(0, 107, 102, 0.1);
+  --header-bg: rgba(246, 241, 232, 0.72);
+  --panel-bg: rgba(255, 255, 255, 0.48);
+  --panel-strong: rgba(255, 255, 255, 0.7);
+  --surface: #ffffff;
+  --surface-soft: rgba(255, 255, 255, 0.92);
+  --surface-elevated: rgba(255, 255, 255, 0.95);
+  --surface-muted: rgba(255,255,255,0.65);
+  --surface-gradient-start: rgba(255,255,255,0.98);
+  --surface-gradient-end: rgba(247,244,238,0.82);
+  --surface-overlay: rgba(247, 244, 238, 0.9);
+  --surface-disabled: rgba(255, 255, 255, 0.55);
+  --surface-chip-active: rgba(255,255,255,0.2);
+  --danger-soft: #fff7f6;
+  --danger-soft-strong: #FFF0EE;
+  --danger-border: #e8c6c1;
+  --danger-text: #9E2A2A;
+  --danger-hover: #ffe4df;
+  --success-soft: #E8F5E9;
+  --success-border: #66BB6A;
+  --success-text: #2E7D32;
+  --warning-soft: #FFF8E1;
+  --warning-border: #F5A623;
+  --warning-text: #B8750A;
+  --selected-row-bg: #edf5ef;
+  --unselected-row-bg: #faf8f5;
+  --selected-row-border: #3D6B4F;
+  --map-frame: rgba(23, 19, 15, 0.18);
+  --map-scrim: rgba(23, 19, 15, 0.06);
+  --overlay-bg: rgba(26, 23, 20, 0.5);
+  --text-on-accent: #fff;
+  --scrollbar-track: var(--cream-dark);
+  --scrollbar-thumb: var(--ink-muted);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --cream: #121816;
+  --cream-dark: #1a2320;
+  --ink: #f2efe8;
+  --ink-soft: #d4cdc0;
+  --ink-muted: #9e978b;
+  --accent: #3cc8bf;
+  --accent-light: rgba(60, 200, 191, 0.18);
+  --accent-dark: #1f9a92;
+  --green: #7fbc8b;
+  --green-light: rgba(127, 188, 139, 0.14);
+  --blue: #7aa7ff;
+  --blue-light: rgba(122, 167, 255, 0.15);
+  --amber: #f0c35b;
+  --amber-light: rgba(240, 195, 91, 0.15);
+  --border: rgba(242, 239, 232, 0.12);
+  --border-strong: rgba(242, 239, 232, 0.24);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.28);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.34);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.42);
+  --page-bg: #0f1413;
+  --page-glow-1: rgba(60, 200, 191, 0.12);
+  --page-glow-2: rgba(76, 140, 255, 0.1);
+  --header-bg: rgba(18, 24, 22, 0.76);
+  --panel-bg: rgba(21, 28, 26, 0.74);
+  --panel-strong: rgba(28, 36, 34, 0.82);
+  --surface: #18201e;
+  --surface-soft: rgba(24, 32, 30, 0.92);
+  --surface-elevated: rgba(26, 34, 32, 0.96);
+  --surface-muted: rgba(31, 42, 39, 0.82);
+  --surface-gradient-start: rgba(28, 36, 34, 0.98);
+  --surface-gradient-end: rgba(20, 27, 25, 0.9);
+  --surface-overlay: rgba(29, 38, 36, 0.92);
+  --surface-disabled: rgba(36, 47, 44, 0.72);
+  --surface-chip-active: rgba(15, 20, 19, 0.42);
+  --danger-soft: rgba(91, 40, 38, 0.42);
+  --danger-soft-strong: rgba(104, 44, 42, 0.55);
+  --danger-border: rgba(227, 110, 100, 0.55);
+  --danger-text: #ffb4ab;
+  --danger-hover: rgba(134, 52, 48, 0.78);
+  --success-soft: rgba(52, 95, 63, 0.4);
+  --success-border: #5fa16a;
+  --success-text: #b9e2c0;
+  --warning-soft: rgba(123, 90, 28, 0.42);
+  --warning-border: #d5a63f;
+  --warning-text: #f1d28e;
+  --selected-row-bg: rgba(61, 107, 79, 0.26);
+  --unselected-row-bg: rgba(255, 255, 255, 0.03);
+  --selected-row-border: #72b58b;
+  --map-frame: rgba(242, 239, 232, 0.14);
+  --map-scrim: rgba(0, 0, 0, 0.18);
+  --overlay-bg: rgba(3, 5, 4, 0.62);
+  --scrollbar-track: #1b2321;
+  --scrollbar-thumb: #5f6c68;
+  color-scheme: dark;
 }
 
 html, body {
   font-family: var(--font-body);
   background:
-    radial-gradient(1200px 500px at 10% -10%, rgba(0, 141, 137, 0.12), transparent 60%),
-    radial-gradient(1000px 420px at 100% 0%, rgba(0, 107, 102, 0.1), transparent 55%),
-    var(--cream);
+    radial-gradient(1200px 500px at 10% -10%, var(--page-glow-1), transparent 60%),
+    radial-gradient(1000px 420px at 100% 0%, var(--page-glow-2), transparent 55%),
+    var(--page-bg);
   color: var(--ink);
   min-height: 100vh;
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 #root {
@@ -66,5 +161,5 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
 }
 
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--cream-dark); }
-::-webkit-scrollbar-thumb { background: var(--ink-muted); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
