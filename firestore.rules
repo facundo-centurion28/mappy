@@ -47,7 +47,7 @@ service cloud.firestore {
     function validPlace(data, creating) {
       return data.keys().hasOnly([
           'name', 'category', 'description', 'emoji', 'imageUrl',
-          'schedule', 'price', 'address', 'mapsUrl', 'tags', 'coordinates', 'createdAt',
+          'instagram', 'schedule', 'price', 'address', 'mapsUrl', 'tags', 'coordinates', 'createdAt',
           'favorite', 'visited'
         ])
         && isRequiredString(data.name, 120)
@@ -55,6 +55,7 @@ service cloud.firestore {
         && isShortString(data.description, 2000)
         && isShortString(data.emoji, 8)
         && isShortString(data.imageUrl, 1000)
+        && (!('instagram' in data) || isShortString(data.instagram, 80))
         && validSchedule(data.schedule)
         && validPrice(data.price)
         && (!("address" in data) || isShortString(data.address, 300))

@@ -18,9 +18,21 @@ function formatPrice(price) {
   return `Hasta ${sym}${price.max}`
 }
 
+function formatInstagramHandle(value) {
+  return (value || '').trim().replace(/^@+/, '')
+}
+
+function getInstagramProfileUrl(value) {
+  const handle = formatInstagramHandle(value)
+  if (!handle) return ''
+  return `https://instagram.com/${handle}`
+}
+
 export default function PlaceDetail({ place, onClose, onEdit, onDelete, onToggleFavorite, onToggleVisited }) {
   if (!place) return null
   const color = CAT_COLORS[place.category] || CAT_COLORS.Otro
+  const instagramHandle = formatInstagramHandle(place.instagram)
+  const instagramUrl = getInstagramProfileUrl(place.instagram)
 
   return (
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
@@ -41,11 +53,18 @@ export default function PlaceDetail({ place, onClose, onEdit, onDelete, onToggle
             <span className={styles.badge} style={{ background: color.bg, color: color.text }}>
               {place.category}
             </span>
-            {place.mapsUrl && (
-              <a href={place.mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapsLink}>
-                Ver en Maps ↗
-              </a>
-            )}
+            <div className={styles.topLinks}>
+              {instagramUrl && (
+                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className={styles.mapsLink}>
+                  @{instagramHandle}
+                </a>
+              )}
+              {place.mapsUrl && (
+                <a href={place.mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.mapsLink}>
+                  Ver en Maps ↗
+                </a>
+              )}
+            </div>
           </div>
 
           <h2 className={styles.name}>{place.name}</h2>

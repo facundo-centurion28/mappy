@@ -644,9 +644,8 @@
   font-size: 13px;
   color: var(--ink);
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .extraDayMeta {

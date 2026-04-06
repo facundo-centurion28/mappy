@@ -6,6 +6,7 @@ import styles from './PlaceForm.module.css'
 const EMPTY = {
   name: '', category: 'Restaurante', description: '',
   emoji: '', imageUrl: '',
+  instagram: '',
   schedule: { open: '', close: '', days: '' },
   price: { min: '', max: '', currency: 'UYU', free: false },
   address: '',
@@ -100,8 +101,11 @@ export default function PlaceForm({ place, onSave, onClose }) {
     const min = form.price.free || form.price.min === '' ? null : Number(form.price.min)
     const max = form.price.free || form.price.max === '' ? null : Number(form.price.max)
 
+    const instagramHandle = (form.instagram || '').trim().replace(/^@+/, '')
+
     onSave({
       ...form,
+      instagram: instagramHandle,
       price: {
         ...form.price,
         min: Number.isNaN(min) ? null : min,
@@ -162,6 +166,16 @@ export default function PlaceForm({ place, onSave, onClose }) {
             <input className={styles.input} value={form.imageUrl}
               onChange={e => set('imageUrl', e.target.value)}
               placeholder="https://..." type="url" />
+          </div>
+
+          <div className={styles.section}>
+            <label className={styles.label}>Instagram (opcional)</label>
+            <input
+              className={styles.input}
+              value={form.instagram}
+              onChange={e => set('instagram', e.target.value)}
+              placeholder="@usuario o usuario"
+            />
           </div>
 
           <div className={styles.sectionGroup}>

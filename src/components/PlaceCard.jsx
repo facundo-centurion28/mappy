@@ -16,9 +16,15 @@ function formatPrice(price) {
   return `Hasta ${sym}${price.max}`
 }
 
+function formatInstagramHandle(value) {
+  return (value || '').trim().replace(/^@+/, '')
+}
+
 export default function PlaceCard({ place, onClick, onToggleFavorite, onToggleVisited, onMoveUp, onMoveDown, layout = 'grid' }) {
   const color = CAT_COLORS[place.category] || CAT_COLORS.Otro
   const isList = layout === 'list'
+  const instagramHandle = formatInstagramHandle(place.instagram)
+  const instagramUrl = instagramHandle ? `https://instagram.com/${instagramHandle}` : ''
 
   return (
     <article className={`${styles.card} ${isList ? styles.cardList : ''}`} onClick={() => onClick(place)}>
@@ -38,6 +44,17 @@ export default function PlaceCard({ place, onClick, onToggleFavorite, onToggleVi
       </div>
       <div className={styles.body}>
         <h3 className={styles.name}>{place.name}</h3>
+        {instagramUrl && (
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.instagramLink}
+            onClick={(e) => e.stopPropagation()}
+          >
+            @{instagramHandle}
+          </a>
+        )}
         <p className={styles.desc}>{place.description || 'Sin descripción'}</p>
         <div className={styles.metaRow}>
           <div className={styles.meta}>

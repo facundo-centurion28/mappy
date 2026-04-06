@@ -80,6 +80,14 @@
   margin-bottom: 10px;
 }
 
+.topLinks {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .badge {
   font-size: 12px;
   font-weight: 500;
