@@ -77,12 +77,16 @@ service cloud.firestore {
       let extraItemsValid = !('extraItems' in data)
         || (data.extraItems is list && data.extraItems.size() <= 500);
 
+      let dayNotesValid = !('dayNotes' in data)
+        || (data.dayNotes is list && data.dayNotes.size() <= 200);
+
       return data.keys().hasOnly([
-          'name', 'items', 'extraItems', 'createdAt', 'startPlaceId', 'endPlaceId'
+          'name', 'items', 'extraItems', 'dayNotes', 'createdAt', 'startPlaceId', 'endPlaceId'
         ])
         && isRequiredString(data.name, 120)
         && itemsValid
         && extraItemsValid
+        && dayNotesValid
         && isShortString(data.startPlaceId, 200)
         && isShortString(data.endPlaceId, 200)
         && (

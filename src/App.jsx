@@ -80,6 +80,11 @@ function getNextSortForDay(activeTrip, activeTripDay) {
   return maxSort + 1
 }
 
+function getDayNotes(trip) {
+  if (!trip) return []
+  return trip.dayNotes || []
+}
+
 export default function App() {
   const initialUiState = readUiState()
   const { places, loading, addPlace, updatePlace, deletePlace } = usePlaces()
@@ -101,6 +106,7 @@ export default function App() {
   const [detailPlace, setDetailPlace] = useState(null)
   const [showQuickExtraInput, setShowQuickExtraInput] = useState(false)
   const [quickExtraText, setQuickExtraText] = useState('')
+  const [dayNoteText, setDayNoteText] = useState('')
 
   const { activeTrip, bySearchAndTrip, filtered, routePlaces, itineraryEntries, dayExtras, categoryCounts, tripDays, hasUnassignedDay } =
     useFilteredPlaces({ places, activeTripId, trips, search, activeFilter, activeTripDay })
@@ -145,6 +151,20 @@ export default function App() {
     setShowQuickExtraInput(false)
     setQuickExtraText('')
   }, [activeTripId, activeTripDay])
+
+  useEffect(() => {
+    if (!activeTrip || activeTripDay === 'Todos') {
+      setDayNoteText('')
+      return
+    }
+
+    const notes = getDayNotes(activeTrip)
+    const found = notes.find((note) => {
+      if (activeTripDay === 'sin-dia') return note.day == null
+      return Number(note.day) === Number(activeTripDay)
+    })
+    setDayNoteText(found?.text || '')
+  }, [activeTrip, activeTripDay])
 
   const handleToggleFavorite = async (place) => {
     try {
@@ -299,34 +319,64 @@ export default function App() {
   const handleMoveItineraryEntry = async (entry, swapWith) => {
     if (!activeTrip || activeTripDay === 'Todos') return
 
+    const fromIndex = itineraryEntries.findIndex((item) => item.key === entry.key)
+    const toIndex = itineraryEntries.findIndex((item) => item.key === swapWith.key)
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return
+
+    const reorderedEntries = [...itineraryEntries]
+    const tempEntry = reorderedEntries[fromIndex]
+    reorderedEntries[fromIndex] = reorderedEntries[toIndex]
+    reorderedEntries[toIndex] = tempEntry
+
     const nextItems = [...(activeTrip.items || [])]
     const nextExtraItems = [...(activeTrip.extraItems || activeTrip.dayItems || [])]
 
-    const findPlaceIndex = (placeId) => nextItems.findIndex(
-      (item) => item.placeId === placeId && matchesDayFilter(item.day, activeTripDay)
-    )
+    const resolvePlaceIndex = (itineraryItem) => {
+      if (itineraryItem.sourceIndex != null) {
+        const direct = nextItems[itineraryItem.sourceIndex]
+        if (direct && direct.placeId === itineraryItem.placeId && matchesDayFilter(direct.day, activeTripDay)) {
+          return itineraryItem.sourceIndex
+        }
+      }
 
-    const findExtraIndex = (extraId) => nextExtraItems.findIndex(
-      (item) => item.id === extraId && matchesDayFilter(item.day, activeTripDay)
-    )
+      return nextItems.findIndex(
+        (item) => item.placeId === itineraryItem.placeId && matchesDayFilter(item.day, activeTripDay)
+      )
+    }
 
-    const entryPlaceIndex = entry.kind === 'place' ? findPlaceIndex(entry.placeId) : -1
-    const entryExtraIndex = entry.kind === 'extra' ? findExtraIndex(entry.id) : -1
-    const swapPlaceIndex = swapWith.kind === 'place' ? findPlaceIndex(swapWith.placeId) : -1
-    const swapExtraIndex = swapWith.kind === 'extra' ? findExtraIndex(swapWith.id) : -1
+    const resolveExtraIndex = (itineraryItem) => {
+      if (itineraryItem.sourceIndex != null) {
+        const direct = nextExtraItems[itineraryItem.sourceIndex]
+        if (direct && matchesDayFilter(direct.day, activeTripDay)) {
+          if (itineraryItem.id && direct.id === itineraryItem.id) return itineraryItem.sourceIndex
+          if (!itineraryItem.id && (direct.text || '') === (itineraryItem.text || '')) return itineraryItem.sourceIndex
+        }
+      }
 
-    const entrySort = entry.kind === 'place'
-      ? toSortValue(nextItems[entryPlaceIndex]?.sort, entry.sourceIndex)
-      : toSortValue(nextExtraItems[entryExtraIndex]?.sort, entry.sourceIndex)
+      if (itineraryItem.id) {
+        const byId = nextExtraItems.findIndex(
+          (item) => item.id === itineraryItem.id && matchesDayFilter(item.day, activeTripDay)
+        )
+        if (byId >= 0) return byId
+      }
 
-    const swapSort = swapWith.kind === 'place'
-      ? toSortValue(nextItems[swapPlaceIndex]?.sort, swapWith.sourceIndex)
-      : toSortValue(nextExtraItems[swapExtraIndex]?.sort, swapWith.sourceIndex)
+      return -1
+    }
 
-    if (entry.kind === 'place' && entryPlaceIndex >= 0) nextItems[entryPlaceIndex] = { ...nextItems[entryPlaceIndex], sort: swapSort }
-    if (entry.kind === 'extra' && entryExtraIndex >= 0) nextExtraItems[entryExtraIndex] = { ...nextExtraItems[entryExtraIndex], sort: swapSort }
-    if (swapWith.kind === 'place' && swapPlaceIndex >= 0) nextItems[swapPlaceIndex] = { ...nextItems[swapPlaceIndex], sort: entrySort }
-    if (swapWith.kind === 'extra' && swapExtraIndex >= 0) nextExtraItems[swapExtraIndex] = { ...nextExtraItems[swapExtraIndex], sort: entrySort }
+    for (let order = 0; order < reorderedEntries.length; order += 1) {
+      const itineraryItem = reorderedEntries[order]
+      if (itineraryItem.kind === 'place') {
+        const placeIndex = resolvePlaceIndex(itineraryItem)
+        if (placeIndex >= 0) {
+          nextItems[placeIndex] = { ...nextItems[placeIndex], sort: order }
+        }
+      } else {
+        const extraIndex = resolveExtraIndex(itineraryItem)
+        if (extraIndex >= 0) {
+          nextExtraItems[extraIndex] = { ...nextExtraItems[extraIndex], sort: order }
+        }
+      }
+    }
 
     try {
       await updateTrip(activeTrip.id, {
@@ -337,6 +387,31 @@ export default function App() {
       })
     } catch {
       window.alert('No se pudo reordenar la ruta del día. Revisá la conexión e intentá de nuevo.')
+    }
+  }
+
+  const handleSaveDayNote = async () => {
+    if (!activeTrip || activeTripDay === 'Todos') return
+
+    const normalizedDay = activeTripDay === 'sin-dia' ? null : Number(activeTripDay)
+    const noteText = dayNoteText.trim()
+    const currentNotes = getDayNotes(activeTrip)
+
+    const filteredNotes = currentNotes.filter((note) => {
+      if (normalizedDay == null) return note.day != null
+      return Number(note.day) !== normalizedDay
+    })
+
+    const nextNotes = noteText
+      ? [...filteredNotes, { day: normalizedDay, text: noteText }]
+      : filteredNotes
+
+    try {
+      await updateTrip(activeTrip.id, {
+        dayNotes: nextNotes,
+      })
+    } catch {
+      window.alert('No se pudo guardar la descripción del día. Revisá la conexión e intentá de nuevo.')
     }
   }
 
@@ -458,6 +533,30 @@ export default function App() {
                   )
                 )}
               </div>
+
+              {activeTrip && activeTripDay !== 'Todos' && (
+                <div className={styles.dayNoteCard}>
+                  <div className={styles.dayNoteHeader}>
+                    <p className={styles.dayNoteTitle}>
+                      {activeTripDay === 'sin-dia' ? 'Descripción de items sin día' : `Descripción del día ${activeTripDay}`}
+                    </p>
+                    <button
+                      className={styles.listToolbarBtn}
+                      onClick={handleSaveDayNote}
+                    >
+                      Guardar nota
+                    </button>
+                  </div>
+                  <textarea
+                    className={styles.dayNoteInput}
+                    value={dayNoteText}
+                    onChange={(e) => setDayNoteText(e.target.value)}
+                    placeholder="Ej: Día relajado, desayuno temprano, museo al mediodía y cena en Palermo"
+                    rows={3}
+                  />
+                </div>
+              )}
+
               <div className={`${styles.grid} ${styles.gridList}`}>
                 {activeTrip && activeTripDay !== 'Todos' ? (
                   itineraryEntries.map((entry, index) => {
