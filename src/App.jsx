@@ -100,7 +100,7 @@ export default function App() {
   const [activeTripDay, setActiveTripDay] = useState(initialUiState.activeTripDay || 'Todos')
   const [showForm, setShowForm] = useState(false)
   const [showTripForm, setShowTripForm] = useState(false)
-  const [routeMode, setRouteMode] = useState(initialUiState.routeMode || 'walking')
+  const [routeMode, setRouteMode] = useState(initialUiState.routeMode || 'none')
   const [editingPlace, setEditingPlace] = useState(null)
   const [editingTrip, setEditingTrip] = useState(null)
   const [detailPlace, setDetailPlace] = useState(null)

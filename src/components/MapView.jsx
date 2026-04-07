@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getPlaceEmoji } from '../data/places'
+import { SUBTE_LINES } from '../data/subteBA'
+import { fetchBuenosAiresSubteData } from '../utils/subteData'
 import styles from './MapView.module.css'
 
 // Fix default marker icons broken by Vite's asset handling
@@ -59,6 +61,8 @@ export default function MapView({
   endPlaceId = '',
   onSelectPlace,
 }) {
+  const [showSubte, setShowSubte] = useState(true)
+  const [subteLines, setSubteLines] = useState(SUBTE_LINES)
   const withCoords = useMemo(
     () => places.filter(p => p.coordinates?.lat != null && p.coordinates?.lng != null),
     [places]
@@ -81,6 +85,24 @@ export default function MapView({
     const avgLng = withCoords.reduce((s, p) => s + p.coordinates.lng, 0) / withCoords.length
     return [avgLat, avgLng]
   }, [withCoords])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadSubteRealData() {
+      try {
+        const realLines = await fetchBuenosAiresSubteData(controller.signal)
+        if (realLines?.length) {
+          setSubteLines(realLines)
+        }
+      } catch {
+        // Keep fallback local dataset.
+      }
+    }
+
+    loadSubteRealData()
+    return () => controller.abort()
+  }, [])
 
   useEffect(() => {
     if (routeMode === 'none' || routeStops.length < 2) {
@@ -168,6 +190,29 @@ export default function MapView({
             : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
         />
         <MapViewport markerPoints={markerPoints} routePoints={routeLine} />
+        {showSubte && subteLines.map((line) => (
+          <Polyline
+            key={`subte-line-${line.id}`}
+            positions={line.path}
+            pathOptions={{ color: line.color, weight: 4, opacity: 0.82 }}
+          />
+        ))}
+        {showSubte && subteLines.flatMap((line) =>
+          line.stations.map((station) => (
+            <CircleMarker
+              key={`subte-st-${line.id}-${station.name}`}
+              center={station.coord}
+              radius={4}
+              pathOptions={{ color: line.color, weight: 2, fillColor: '#ffffff', fillOpacity: 1 }}
+            >
+              <Popup>
+                <strong>{station.name}</strong>
+                <br />
+                <span style={{ fontSize: '12px' }}>{line.name}</span>
+              </Popup>
+            </CircleMarker>
+          ))
+        )}
         {routeLine.length > 1 && (
           <Polyline positions={routeLine} pathOptions={{ color: '#008D89', weight: 5, opacity: 0.8 }} />
         )}
@@ -202,6 +247,28 @@ export default function MapView({
       {routeLine.length > 1 && (
         <div className={styles.routeNotice}>
           Ruta por calles (modo {routeMode === 'driving' ? 'auto' : 'caminando'})
+        </div>
+      )}
+
+      <button
+        type="button"
+        className={styles.subteToggle}
+        onClick={() => setShowSubte((prev) => !prev)}
+      >
+        {showSubte ? 'Ocultar subte BA' : 'Mostrar subte BA'}
+      </button>
+
+      {showSubte && (
+        <div className={styles.subteLegend}>
+          <p className={styles.subteLegendTitle}>Subte CABA</p>
+          <div className={styles.subteLegendItems}>
+            {subteLines.map((line) => (
+              <span key={`subte-legend-${line.id}`} className={styles.subteLegendItem}>
+                <span className={styles.subteLegendDot} style={{ background: line.color }} />
+                {line.id}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 

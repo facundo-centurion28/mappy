@@ -52,6 +52,61 @@
   letter-spacing: 0.02em;
 }
 
+.subteToggle {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 500;
+  border: 1px solid rgba(23, 19, 15, 0.16);
+  background: rgba(255, 255, 255, 0.92);
+  color: #17130f;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.subteLegend {
+  position: absolute;
+  bottom: 48px;
+  left: 12px;
+  z-index: 500;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(23, 19, 15, 0.16);
+  border-radius: 12px;
+  padding: 8px 10px;
+  min-width: 132px;
+}
+
+.subteLegendTitle {
+  margin: 0 0 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #443b31;
+}
+
+.subteLegendItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.subteLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #17130f;
+}
+
+.subteLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(23, 19, 15, 0.2);
+}
+
 .noticeError {
   bottom: 48px;
   background: rgba(126, 33, 33, 0.88);

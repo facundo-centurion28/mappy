@@ -27,15 +27,24 @@ function buildInitialAssignments(places, trip) {
 
     trip.items.forEach((item) => {
       if (byPlace[item.placeId]) {
-        const normalizedDay = Math.max(1, Number(item.day) || 1)
-        groupedDays[item.placeId] = [...(groupedDays[item.placeId] || []), normalizedDay]
+        if (!groupedDays[item.placeId]) {
+          groupedDays[item.placeId] = { days: [], hasUnassigned: false }
+        }
+
+        const parsedDay = Number(item.day)
+        if (Number.isFinite(parsedDay) && parsedDay > 0) {
+          groupedDays[item.placeId].days.push(Math.floor(parsedDay))
+        } else {
+          groupedDays[item.placeId].hasUnassigned = true
+        }
       }
     })
 
-    Object.entries(groupedDays).forEach(([placeId, days]) => {
+    Object.entries(groupedDays).forEach(([placeId, bucket]) => {
+      const normalizedDays = parseDays(bucket.days.join(',')).join(', ')
       byPlace[placeId] = {
         enabled: true,
-        days: parseDays(days.join(',')).join(', '),
+        days: normalizedDays,
       }
     })
   }
@@ -159,6 +168,18 @@ export default function TripForm({ trip, places, onSave, onClose }) {
     submitLockRef.current = true
     setIsSaving(true)
 
+    const existingSortByKey = new Map(
+      (trip?.items || []).map((item, index) => {
+        const day = Number.isFinite(Number(item.day)) && Number(item.day) > 0
+          ? Math.floor(Number(item.day))
+          : null
+        return [`${item.placeId}::${day ?? 'sin-dia'}`, toSortValue(item.sort, index)]
+      })
+    )
+
+    const maxExistingSort = Math.max(-1, ...(trip?.items || []).map((item, index) => toSortValue(item.sort, index)))
+    let nextSort = maxExistingSort + 1
+
     const items = Object.entries(assignments)
       .filter(([, value]) => value?.enabled)
       .flatMap(([placeId, value]) => {
@@ -166,10 +187,17 @@ export default function TripForm({ trip, places, onSave, onClose }) {
         if (days.length === 0) return [{ placeId, day: null }]
         return days.map((day) => ({ placeId, day }))
       })
-      .map((item, index) => ({
-        ...item,
-        sort: toSortValue(item.sort, index),
-      }))
+      .map((item) => {
+        const key = `${item.placeId}::${item.day ?? 'sin-dia'}`
+        const existingSort = existingSortByKey.get(key)
+        if (existingSort != null) {
+          return { ...item, sort: existingSort }
+        }
+
+        const assignedSort = nextSort
+        nextSort += 1
+        return { ...item, sort: assignedSort }
+      })
 
     const includedPlaceIds = new Set(items.map((item) => item.placeId))
     const safeStartPlaceId = includedPlaceIds.has(startPlaceId) ? startPlaceId : ''
