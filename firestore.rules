@@ -82,7 +82,8 @@ service cloud.firestore {
         || (data.dayNotes is list && data.dayNotes.size() <= 200);
 
       return data.keys().hasOnly([
-          'name', 'items', 'extraItems', 'dayNotes', 'createdAt', 'startPlaceId', 'endPlaceId'
+          'name', 'items', 'extraItems', 'dayNotes', 'createdAt', 'startPlaceId', 'endPlaceId',
+          'startDate', 'endDate'
         ])
         && isRequiredString(data.name, 120)
         && itemsValid
@@ -90,6 +91,8 @@ service cloud.firestore {
         && dayNotesValid
         && isShortString(data.startPlaceId, 200)
         && isShortString(data.endPlaceId, 200)
+        && (!('startDate' in data) || isShortString(data.startDate, 20))
+        && (!('endDate' in data) || isShortString(data.endDate, 20))
         && (
           creating
             ? isNumber(data.createdAt)

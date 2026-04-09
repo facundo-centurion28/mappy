@@ -84,6 +84,27 @@
   gap: 12px;
 }
 
+.backBtn {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  color: var(--ink-soft);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.backBtn:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+}
+
 .logoImg {
   width: 48px;
   height: 48px;
@@ -712,6 +733,499 @@
   transform: translateY(-1px);
 }
 
+.homeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  animation: riseIn 0.3s ease;
+}
+
+.homeTitle {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.tripsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  animation: riseIn 0.4s ease;
+}
+
+/* Trip detail header */
+.tripDetailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+  animation: riseIn 0.3s ease;
+}
+
+.tripDetailInfo {
+  min-width: 0;
+}
+
+.tripDetailName {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.tripDetailDates {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.tripDetailDayCount {
+  margin-left: 6px;
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+
+.tripDetailActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Trip tabs */
+.tripTabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--panel-bg);
+  animation: riseIn 0.3s ease;
+}
+
+.tripTab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 16px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.tripTab:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.tripTab:hover {
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+}
+
+.tripTabActive {
+  background: var(--ink) !important;
+  color: var(--cream) !important;
+}
+
+.tripTabCount {
+  font-size: 12px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-chip-active);
+}
+
+/* Days section */
+.daysSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: riseIn 0.35s ease;
+}
+
+/* Days planner layout (sidebar + content) */
+.daysPlannerLayout {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  animation: riseIn 0.35s ease;
+}
+
+.daysSidebar {
+  position: sticky;
+  top: 94px;
+  flex: 0 0 240px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--surface-gradient-start), var(--surface-gradient-end));
+  overflow: hidden;
+}
+
+.daysSidebarToggle {
+  display: none;
+}
+
+.daysSidebarChevron {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.daysSidebarChevronOpen {
+  transform: rotate(180deg);
+}
+
+.daysSidebarHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.daysSidebarIcon {
+  font-size: 16px;
+}
+
+.daysSidebarTitle {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.daysSidebarList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+}
+
+.daysSidebarBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 18px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid var(--border);
+}
+
+.daysSidebarBtn:last-child {
+  border-bottom: none;
+}
+
+.daysSidebarBtn:hover {
+  background: var(--surface-soft);
+}
+
+.daysSidebarBtnActive {
+  background: var(--accent) !important;
+  color: var(--text-on-accent) !important;
+}
+
+.daysSidebarBtnActive .daysSidebarBtnDay,
+.daysSidebarBtnActive .daysSidebarBtnDate {
+  color: var(--text-on-accent);
+}
+
+.daysSidebarBtnActive .daysSidebarBtnCount {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--text-on-accent);
+}
+
+.daysSidebarBtnText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.daysSidebarBtnDay {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.daysSidebarBtnDate {
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-transform: capitalize;
+}
+
+.daysSidebarBtnCount {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-soft));
+  color: var(--accent-dark);
+  flex-shrink: 0;
+}
+
+.daysSidebarBtnUnassigned {
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+/* Planner content (right side) */
+.daysPlannerContent {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.daysPlannerMap {
+  height: 320px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.daysPlannerMap > div {
+  min-height: 0 !important;
+}
+
+.daysPlannerTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+
+.daysPlannerTitleDate {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-muted);
+  text-transform: capitalize;
+}
+
+.daysPlannerEmpty {
+  font-size: 13px;
+  color: var(--ink-muted);
+  padding: 12px 0;
+  margin: 0;
+}
+
+.daysPlannerList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(160deg, var(--surface-gradient-start), var(--surface-gradient-end));
+  overflow: hidden;
+}
+
+.daysPlannerItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s ease;
+}
+
+.daysPlannerItem:last-child {
+  border-bottom: none;
+}
+
+.daysPlannerItem:hover {
+  background: var(--surface-soft);
+}
+
+.daysPlannerItemNumber {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.daysPlannerItemEmoji {
+  font-size: 20px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.daysPlannerItemInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.daysPlannerItemName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daysPlannerItemDesc {
+  font-size: 12px;
+  color: var(--ink-muted);
+  white-space: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daysPlannerItemCat {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.daysPlannerRemoveBtn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.daysPlannerRemoveBtn:hover {
+  opacity: 1;
+}
+
+.daysPlannerReorderBtns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.daysPlannerReorderBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  line-height: 1;
+  padding: 3px 6px;
+  cursor: pointer;
+  color: var(--ink-muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.daysPlannerReorderBtn:hover:not(:disabled) {
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+
+.daysPlannerReorderBtn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.daysPlannerAddBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent-light) 50%, var(--surface));
+  color: var(--accent-dark);
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.daysPlannerAddBtn:hover {
+  transform: scale(1.1);
+  background: var(--accent-light);
+}
+
+.daysPlannerNoteInput {
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(160deg, var(--surface-gradient-start), var(--surface-gradient-end));
+  color: var(--ink);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+
+.daysPlannerNoteInput:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 2px;
+}
+
+/* Keep old day card sub-styles for extras */
+.dayCardExtra {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dayCardExtra:last-child {
+  border-bottom: none;
+}
+
+.dayCardExtraText {
+  font-size: 13px;
+  color: var(--ink-soft);
+  flex: 1;
+  min-width: 0;
+}
+
+.dayCardExtraEditInput {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+}
+
+.dayCardPlaceImg {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
 .footer {
   max-width: 1100px;
   margin: 0 auto;
@@ -748,6 +1262,17 @@
   .main { padding: 20px 16px 40px; }
   .footer { padding: 12px 16px 20px; }
   .footerText { font-size: 11px; letter-spacing: 0.03em; }
+  .homeHeader { margin-bottom: 16px; }
+  .homeTitle { font-size: 22px; }
+  .tripsGrid { grid-template-columns: 1fr; gap: 14px; }
+  .backBtn { width: 34px; height: 34px; font-size: 16px; }
+  .tripDetailHeader { flex-direction: column; align-items: flex-start; }
+  .tripDetailName { font-size: 22px; }
+  .tripDetailActions { width: 100%; }
+  .tripTabs { border-radius: var(--radius-sm); }
+  .tripTab { padding: 10px 12px; font-size: 13px; }
+  .dayCardHeader { padding: 12px 14px 8px; }
+  .dayCardItems { padding: 0 6px 8px; }
   .controls { padding: 12px; }
   .controlBlock { padding: 9px; }
   .grid { grid-template-columns: 1fr; }
@@ -792,5 +1317,63 @@
   .routeModeSelect {
     min-width: 0;
     width: 100%;
+  }
+
+  /* Planner responsive */
+  .daysPlannerLayout {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .daysSidebar {
+    position: static;
+    flex: none;
+    width: 100%;
+  }
+  .daysSidebarHeader {
+    display: none;
+  }
+  .daysSidebarToggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 18px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .daysSidebarToggleText {
+    flex: 1;
+    text-align: left;
+    text-transform: capitalize;
+  }
+  .daysSidebarList {
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    border-top: none;
+  }
+  .daysSidebarListOpen {
+    max-height: 60vh;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+  }
+  .daysSidebarBtn {
+    flex-shrink: 0;
+    min-width: unset;
+    border-bottom: 1px solid var(--border);
+    border-right: none;
+  }
+  .daysSidebarBtn:last-child {
+    border-bottom: none;
+  }
+  .daysPlannerMap {
+    height: 250px;
   }
 }

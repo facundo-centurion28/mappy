@@ -1,60 +1,23 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
-import { getPlaceEmoji } from '../data/places'
 import styles from './TripForm.module.css'
-
-function parseDays(value) {
-  return [...new Set(
-    value
-      .split(',')
-      .map((part) => Number(part.trim()))
-      .filter(Boolean)
-      .map((day) => Math.max(1, day))
-  )].sort((a, b) => a - b)
-}
 
 function toSortValue(value, fallback) {
   const n = Number(value)
   return Number.isFinite(n) ? n : fallback
 }
 
-function buildInitialAssignments(places, trip) {
-  const byPlace = Object.fromEntries(
-    places.map((p) => [p.id, { enabled: false, days: '' }])
-  )
-
-  if (trip?.items?.length) {
-    const groupedDays = {}
-
-    trip.items.forEach((item) => {
-      if (byPlace[item.placeId]) {
-        if (!groupedDays[item.placeId]) {
-          groupedDays[item.placeId] = { days: [], hasUnassigned: false }
-        }
-
-        const parsedDay = Number(item.day)
-        if (Number.isFinite(parsedDay) && parsedDay > 0) {
-          groupedDays[item.placeId].days.push(Math.floor(parsedDay))
-        } else {
-          groupedDays[item.placeId].hasUnassigned = true
-        }
-      }
-    })
-
-    Object.entries(groupedDays).forEach(([placeId, bucket]) => {
-      const normalizedDays = parseDays(bucket.days.join(',')).join(', ')
-      byPlace[placeId] = {
-        enabled: true,
-        days: normalizedDays,
-      }
-    })
-  }
-
-  return byPlace
+function computeTripDayCount(startDate, endDate) {
+  if (!startDate || !endDate) return 0
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  const diff = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1
+  return diff > 0 ? diff : 0
 }
 
 export default function TripForm({ trip, places, onSave, onClose }) {
   const [name, setName] = useState('')
-  const [assignments, setAssignments] = useState({})
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [extraItems, setExtraItems] = useState([])
   const [extraText, setExtraText] = useState('')
   const [extraDay, setExtraDay] = useState('')
@@ -63,78 +26,23 @@ export default function TripForm({ trip, places, onSave, onClose }) {
   const [isSaving, setIsSaving] = useState(false)
   const submitLockRef = useRef(false)
 
+  const tripDayCount = useMemo(() => computeTripDayCount(startDate, endDate), [startDate, endDate])
+
   useEffect(() => {
     setName(trip?.name || '')
-    setAssignments(buildInitialAssignments(places, trip))
+    setStartDate(trip?.startDate || '')
+    setEndDate(trip?.endDate || '')
     setExtraItems(trip?.extraItems || trip?.dayItems || [])
     setStartPlaceId(trip?.startPlaceId || '')
     setEndPlaceId(trip?.endPlaceId || '')
   }, [trip, places])
 
-  const selectedCount = useMemo(
-    () => Object.values(assignments).filter((a) => a?.enabled).length,
-    [assignments]
-  )
-
-  const allSelected = places.length > 0 && selectedCount === places.length
-
-  const toggleAll = () => {
-    if (allSelected) {
-      setAssignments(buildInitialAssignments(places, null))
-      setStartPlaceId('')
-      setEndPlaceId('')
-    } else {
-      setAssignments(
-        Object.fromEntries(places.map((p) => [p.id, { enabled: true, days: '1' }]))
-      )
-    }
-  }
-
-  const selectedPlaces = useMemo(
-    () => places.filter((place) => assignments[place.id]?.enabled),
-    [places, assignments]
-  )
-
-  const togglePlace = (placeId, enabled) => {
-    setAssignments((prev) => ({
-      ...prev,
-      [placeId]: {
-        enabled,
-        days: enabled ? (prev[placeId]?.days || '1') : (prev[placeId]?.days || ''),
-      },
-    }))
-
-    if (!enabled) {
-      setStartPlaceId((prev) => (prev === placeId ? '' : prev))
-      setEndPlaceId((prev) => (prev === placeId ? '' : prev))
-    }
-  }
-
-  const setDays = (placeId, days) => {
-    if (!/^[\d,\s]*$/.test(days)) return
-    setAssignments((prev) => ({
-      ...prev,
-      [placeId]: {
-        enabled: prev[placeId]?.enabled || false,
-        days,
-      },
-    }))
-  }
-
-  const normalizeDaysOnBlur = (placeId) => {
-    setAssignments((prev) => {
-      const item = prev[placeId]
-      if (!item?.enabled) return prev
-      const normalized = parseDays(item.days)
-      return {
-        ...prev,
-        [placeId]: {
-          ...item,
-          days: normalized.join(', '),
-        },
-      }
-    })
-  }
+  // Places already in the trip (for route selectors)
+  const tripPlaces = useMemo(() => {
+    if (!trip?.items?.length) return []
+    const ids = new Set(trip.items.map((item) => item.placeId))
+    return places.filter((p) => ids.has(p.id))
+  }, [trip, places])
 
   const addExtraItem = () => {
     const text = extraText.trim()
@@ -168,42 +76,15 @@ export default function TripForm({ trip, places, onSave, onClose }) {
     submitLockRef.current = true
     setIsSaving(true)
 
-    const existingSortByKey = new Map(
-      (trip?.items || []).map((item, index) => {
-        const day = Number.isFinite(Number(item.day)) && Number(item.day) > 0
-          ? Math.floor(Number(item.day))
-          : null
-        return [`${item.placeId}::${day ?? 'sin-dia'}`, toSortValue(item.sort, index)]
-      })
-    )
-
-    const maxExistingSort = Math.max(-1, ...(trip?.items || []).map((item, index) => toSortValue(item.sort, index)))
-    let nextSort = maxExistingSort + 1
-
-    const items = Object.entries(assignments)
-      .filter(([, value]) => value?.enabled)
-      .flatMap(([placeId, value]) => {
-        const days = parseDays(value.days)
-        if (days.length === 0) return [{ placeId, day: null }]
-        return days.map((day) => ({ placeId, day }))
-      })
-      .map((item) => {
-        const key = `${item.placeId}::${item.day ?? 'sin-dia'}`
-        const existingSort = existingSortByKey.get(key)
-        if (existingSort != null) {
-          return { ...item, sort: existingSort }
-        }
-
-        const assignedSort = nextSort
-        nextSort += 1
-        return { ...item, sort: assignedSort }
-      })
+    // Preserve existing items as-is
+    const items = (trip?.items || []).map((item, index) => ({
+      ...item,
+      sort: toSortValue(item.sort, index),
+    }))
 
     const includedPlaceIds = new Set(items.map((item) => item.placeId))
     const safeStartPlaceId = includedPlaceIds.has(startPlaceId) ? startPlaceId : ''
-    const safeEndPlaceId = includedPlaceIds.has(endPlaceId)
-      ? endPlaceId
-      : ''
+    const safeEndPlaceId = includedPlaceIds.has(endPlaceId) ? endPlaceId : ''
 
     const normalizedExtraItems = extraItems
       .map((item, index) => {
@@ -222,6 +103,8 @@ export default function TripForm({ trip, places, onSave, onClose }) {
     try {
       await onSave({
         name: name.trim(),
+        startDate: startDate || '',
+        endDate: endDate || '',
         items,
         extraItems: normalizedExtraItems,
         startPlaceId: safeStartPlaceId,
@@ -256,55 +139,35 @@ export default function TripForm({ trip, places, onSave, onClose }) {
           </div>
 
           <div className={styles.section}>
-            <div className={styles.sectionTop}>
-              <label className={styles.label}>Lugares y días asignados</label>
-              <div className={styles.sectionTopRight}>
-                <span className={styles.count}>{selectedCount} seleccionados</span>
-                <button
-                  type="button"
-                  className={styles.selectAllBtn}
-                  onClick={toggleAll}
-                  disabled={isSaving || places.length === 0}
-                >
-                  {allSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}
-                </button>
+            <label className={styles.label}>Fechas del viaje</label>
+            <div className={styles.dateRow}>
+              <div className={styles.dateField}>
+                <label className={styles.dateLabel}>Inicio</label>
+                <input
+                  className={styles.input}
+                  type="date"
+                  value={startDate}
+                  disabled={isSaving}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
               </div>
-            </div>
-            <p className={styles.helper}>Podés repetir un lugar en varios días separando los números con coma.</p>
-
-            <div className={styles.list}>
-              {places.map((place) => {
-                const data = assignments[place.id] || { enabled: false, days: '' }
-                return (
-                  <div
-                    key={place.id}
-                    className={`${styles.row} ${data.enabled ? styles.rowSelected : styles.rowUnselected}`}
-                  >
-                    <label className={styles.placeLabel}>
-                      <input
-                        type="checkbox"
-                        checked={data.enabled}
-                        disabled={isSaving}
-                        onChange={(e) => togglePlace(place.id, e.target.checked)}
-                      />
-                      <span className={styles.placeName}>{getPlaceEmoji(place)} {place.name}</span>
-                    </label>
-                    <div className={`${styles.dayWrap} ${!data.enabled ? styles.dayWrapDisabled : ''}`}>
-                      <span>Días</span>
-                      <input
-                        className={styles.dayInput}
-                        type="text"
-                        inputMode="numeric"
-                        value={data.days}
-                        disabled={!data.enabled || isSaving}
-                        placeholder="1, 3"
-                        onChange={(e) => setDays(place.id, e.target.value)}
-                        onBlur={() => normalizeDaysOnBlur(place.id)}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
+              <div className={styles.dateField}>
+                <label className={styles.dateLabel}>Fin</label>
+                <input
+                  className={styles.input}
+                  type="date"
+                  value={endDate}
+                  disabled={isSaving}
+                  min={startDate || undefined}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+              {tripDayCount > 0 && (
+                <div className={styles.dateSummary}>
+                  <span className={styles.dateSummaryNumber}>{tripDayCount}</span>
+                  <span className={styles.dateSummaryLabel}>{tripDayCount === 1 ? 'día' : 'días'}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -320,11 +183,11 @@ export default function TripForm({ trip, places, onSave, onClose }) {
                 <select
                   className={styles.select}
                   value={startPlaceId}
-                  disabled={isSaving || selectedPlaces.length === 0}
+                  disabled={isSaving || tripPlaces.length === 0}
                   onChange={(e) => setStartPlaceId(e.target.value)}
                 >
                   <option value="">Sin fijar</option>
-                  {selectedPlaces.map((place) => (
+                  {tripPlaces.map((place) => (
                     <option key={`start-${place.id}`} value={place.id}>{place.name}</option>
                   ))}
                 </select>
@@ -335,11 +198,11 @@ export default function TripForm({ trip, places, onSave, onClose }) {
                 <select
                   className={styles.select}
                   value={endPlaceId}
-                  disabled={isSaving || selectedPlaces.length === 0}
+                  disabled={isSaving || tripPlaces.length === 0}
                   onChange={(e) => setEndPlaceId(e.target.value)}
                 >
                   <option value="">Sin fijar</option>
-                  {selectedPlaces.map((place) => (
+                  {tripPlaces.map((place) => (
                     <option key={`end-${place.id}`} value={place.id}>{place.name}</option>
                   ))}
                 </select>

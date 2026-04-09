@@ -27,6 +27,15 @@ App para guardar y organizar tus lugares favoritos de Google Maps.
 - El botón de guardar viaje se bloquea mientras persiste en Firestore para evitar duplicados por doble click
 - Corrección de capas visuales: el mapa ya no sobrepasa el header sticky
 - Refresh visual completo: interfaz más estética/fancy con nuevo look & feel (fondos, controles, tarjetas y mapa)
+- **Pantalla principal de viajes**: al abrir la app se muestra una grilla de cards con todos los viajes creados
+- Al hacer click en un viaje se entra a la vista detallada con mapa, filtros y lugares del viaje
+- Botón de volver (←) en el header para regresar a la pantalla de viajes
+- Los lugares se organizan dentro de viajes (cada viaje tiene sus lugares asignados)
+- Script de migración para asignar todos los lugares existentes al viaje "Argentina"
+- **Fechas del viaje**: campo de fecha inicio/fin con cálculo automático de cantidad de días
+- **Dos secciones dentro del viaje**: pestaña "Lugares" (mapa + filtros + lista) y pestaña "Días" (itinerario día por día con lugares, extras y notas)
+- En la sección Días se muestra la fecha real de cada día según las fechas del viaje
+- Las tarjetas de viaje en la pantalla principal muestran el rango de fechas si está configurado
 - Los datos se guardan en **Firebase Firestore** (nube)
 
 ## Estructura del proyecto
@@ -42,6 +51,8 @@ src/
 │   ├── PlaceForm.module.css
 │   ├── MapView.jsx         # Mapa interactivo con markers emoji
 │   ├── MapView.module.css
+│   ├── TripCard.jsx        # Card de viaje en la pantalla principal
+│   ├── TripCard.module.css
 │   ├── TripForm.jsx        # Formulario de viajes (lugares + día)
 │   └── TripForm.module.css
 ├── data/

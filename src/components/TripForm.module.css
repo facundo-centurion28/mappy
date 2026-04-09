@@ -92,6 +92,50 @@
   align-items: baseline;
 }
 
+.dateRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.dateField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.dateLabel {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.dateSummary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent-light) 50%, var(--surface));
+  min-width: 56px;
+}
+
+.dateSummaryNumber {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  line-height: 1;
+}
+
+.dateSummaryLabel {
+  font-size: 10px;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .sectionTopRight {
   display: flex;
   align-items: center;
@@ -326,6 +370,10 @@
 
   .routePoints {
     grid-template-columns: 1fr;
+  }
+
+  .dateRow {
+    flex-wrap: wrap;
   }
 
   .extraRow {

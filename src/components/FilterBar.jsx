@@ -22,7 +22,7 @@ export default function FilterBar({
   activeTripDay,
   onTripDayChange,
   tripDays,
-  hasUnassignedDay,
+  insideTrip = false,
 }) {
   const [showQuickFilters, setShowQuickFilters] = useState(false)
   const [showTripFilters, setShowTripFilters] = useState(false)
@@ -78,6 +78,7 @@ export default function FilterBar({
         )}
       </div>
 
+      {!insideTrip && (
       <div className={styles.controlBlock}>
         <button
           type="button"
@@ -155,20 +156,14 @@ export default function FilterBar({
                       Día {day}
                     </button>
                   ))}
-                  {hasUnassignedDay && (
-                    <button
-                      className={`${styles.dayBtn} ${activeTripDay === 'sin-dia' ? styles.dayBtnActive : ''}`}
-                      onClick={() => onTripDayChange('sin-dia')}
-                    >
-                      Sin día
-                    </button>
-                  )}
+
                 </div>
               </div>
             )}
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }
