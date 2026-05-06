@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"chat.tools.terminal.autoApprove": {
+			"git add": true,
+			"git commit": true,
+			"git push": true,
+			"/^npx firebase deploy --only firestore:rules 2>&1 \\| tail -10$/": {
+				"approve": true,
+				"matchCommandLine": true
+			}
+		}
+	}
+}
